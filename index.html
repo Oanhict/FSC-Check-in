@@ -1,0 +1,1492 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#12305A">
+<title>FSC Check-in</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23E2621B'/%3E%3Ctext x='32' y='41' font-family='Arial' font-weight='700' font-size='22' text-anchor='middle' fill='white'%3EFSC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+/* Layout: a gate kiosk. Brand band on top, one working surface below that splits into
+   two columns on wide screens and stacks on phones. Guests see registration; organizers
+   see check-in, attendance and photo review. */
+:root {
+  --paper: #F2F4F8;
+  --surface: #FFFFFF;
+  --sunk: #E9EDF4;
+  --ink: #0E1B2E;
+  --muted: #59667D;
+  --line: #D9DFE9;
+  --brand: #12305A;
+  --brand-ink: #FFFFFF;
+  --brand-muted: #B8C7DE;
+  --accent: #E2621B;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #FCEBDF;
+  --ok: #10806A;
+  --ok-soft: #DDF3EE;
+  --warn: #9A6200;
+  --warn-soft: #FDF0D5;
+  --bad: #BE2639;
+  --bad-soft: #FBE3E6;
+  --heading: #12305A;
+  --shadow: 0 1px 2px rgba(14,27,46,.06), 0 8px 24px rgba(14,27,46,.06);
+  --font: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --r-lg: 20px;
+  --r-md: 12px;
+  --r-sm: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0B111D; --surface: #131C2C; --sunk: #0F1726; --ink: #E7ECF4; --muted: #95A2B8;
+    --line: #26334A; --brand: #15284A; --brand-ink: #F2F5FA; --brand-muted: #9FB2D1;
+    --accent: #FF7D38; --accent-ink: #1A0D04; --accent-soft: #3A2214; --ok: #3CC4A6; --ok-soft: #10302A;
+    --warn: #F2B94B; --warn-soft: #3A2C10; --bad: #FF6B7D; --bad-soft: #3A1820; --heading: #FF9A5E;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0B111D; --surface: #131C2C; --sunk: #0F1726; --ink: #E7ECF4; --muted: #95A2B8;
+  --line: #26334A; --brand: #15284A; --brand-ink: #F2F5FA; --brand-muted: #9FB2D1;
+  --accent: #FF7D38; --accent-ink: #1A0D04; --accent-soft: #3A2214; --ok: #3CC4A6; --ok-soft: #10302A;
+  --warn: #F2B94B; --warn-soft: #3A2C10; --bad: #FF6B7D; --bad-soft: #3A1820; --heading: #FF9A5E;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--brand); }
+button, input, select { font: inherit; color: inherit; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.2; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+/* Brand band */
+.band { background: var(--brand); color: var(--brand-ink); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.band .wrap { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; padding-block: 12px; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 240px; }
+.mark { width: 40px; height: 40px; border-radius: 11px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 800; font-size: 15px; letter-spacing: .02em; flex: none; }
+.brand-text { min-width: 0; }
+.brand-name { font-weight: 800; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand-venue { color: var(--brand-muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+nav.tabs { display: flex; gap: 4px; background: rgba(255,255,255,.08); padding: 4px; border-radius: 999px; }
+nav.tabs a { color: var(--brand-muted); text-decoration: none; font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+nav.tabs a[aria-current="page"] { background: var(--surface); color: var(--ink); }
+nav.tabs a:hover:not([aria-current="page"]) { color: var(--brand-ink); }
+.engine { border: 0; font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: var(--brand-muted); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.engine .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-muted); }
+.engine[data-s="ready"] .dot { background: #46D3B1; }
+.engine[data-s="loading"] .dot { background: var(--accent); animation: pulse 1s infinite alternate; }
+.engine[data-s="error"] { cursor: pointer; } .engine[data-s="error"] .dot { background: #FF6B7D; }
+@keyframes pulse { to { opacity: .3; } }
+@media (max-width: 680px) {
+  nav.tabs { order: 3; flex: 1 1 100%; } nav.tabs a { flex: 1; text-align: center; padding: 8px 4px; font-size: 13px; }
+}
+
+main { padding-block: 20px 48px; }
+.notice { background: var(--accent-soft); color: var(--ink); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 16px; font-size: 14px; }
+.notice strong { color: var(--accent); }
+.notice.okay { background: var(--ok-soft); } .notice.okay strong { color: var(--ok); }
+
+/* Generic pieces */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px; min-width: 0; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 600; padding: 10px 16px; border-radius: var(--r-md); cursor: pointer; text-decoration: none; font-size: 15px; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.dark { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.btn.good { color: var(--ok); }
+.btn.danger { color: var(--bad); }
+.btn.sm { padding: 6px 10px; font-size: 13px; border-radius: var(--r-sm); }
+.btn.big { padding: 16px 22px; font-size: 17px; border-radius: 16px; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.field { display: grid; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.input { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-md); padding: 11px 13px; font-size: 16px; }
+.input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.check input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--accent); flex: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 999px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.wait { background: var(--sunk); color: var(--muted); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); display: grid; place-items: center; font-weight: 700; font-size: 14px; flex: none; overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.muted { color: var(--muted); }
+.hint { font-size: 12px; color: var(--muted); margin: 0; }
+.empty { text-align: center; color: var(--muted); padding: 28px 12px; font-size: 14px; }
+.spinner { width: 22px; height: 22px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner, .engine .dot { animation: none; } }
+.two { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .two { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; } .two.even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.lead-h { font-size: clamp(26px, 4.2vw, 38px); font-weight: 800; letter-spacing: -.01em; }
+.lead-p { color: var(--muted); margin: 8px 0 0; max-width: 56ch; }
+
+/* Check-in */
+.stage { margin-top: 18px; background: var(--sunk); border-radius: var(--r-lg); aspect-ratio: 4 / 3; max-width: 100%; position: relative; overflow: hidden; display: grid; place-items: center; }
+@media (max-width: 520px) { .stage { aspect-ratio: 3 / 4; } }
+.stage img.shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.guide { width: min(46%, 240px); aspect-ratio: .78; border: 3px dashed var(--muted); border-radius: 50%; opacity: .55; }
+.stage-msg { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; gap: 10px; justify-content: center; background: var(--surface); color: var(--ink); border-radius: 999px; padding: 10px 16px; font-weight: 600; font-size: 15px; box-shadow: var(--shadow); text-align: center; }
+.stage[data-s="ok"] { outline: 4px solid var(--ok); outline-offset: -4px; }
+.stage[data-s="fail"] { outline: 4px solid var(--bad); outline-offset: -4px; }
+.stage[data-s="fail"] .stage-msg { color: var(--bad); }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.actions .btn.big { flex: 1 1 240px; }
+.steps { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.steps li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--muted); }
+.steps b { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-size: 13px; }
+.counter { display: flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
+.counter strong { font-size: 44px; font-weight: 800; line-height: 1; }
+.bar { height: 8px; background: var(--sunk); border-radius: 99px; overflow: hidden; margin-top: 12px; }
+.bar i { display: block; height: 100%; background: var(--ok); border-radius: 99px; transition: width .4s; }
+.feed { list-style: none; margin: 16px 0 0; padding: 0; }
+.feed li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); min-width: 0; }
+.feed .who { min-width: 0; flex: 1; }
+.feed .who b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feed .who span { font-size: 13px; color: var(--muted); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Registration */
+.form { display: grid; gap: 14px; }
+.photos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.slot { aspect-ratio: 3 / 4; max-width: 100%; border: 2px dashed var(--line); border-radius: var(--r-md); background: var(--sunk); position: relative; overflow: hidden; display: grid; place-items: center; align-content: center; gap: 4px; color: var(--muted); font-size: 13px; font-weight: 600; text-align: center; padding: 6px; cursor: pointer; width: 100%; }
+button.slot:hover { border-color: var(--accent); color: var(--accent); }
+.slot .plus { font-size: 26px; line-height: 1; font-weight: 400; }
+.slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.slot .tag { position: absolute; left: 6px; right: 6px; bottom: 6px; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 3px 6px; background: var(--surface); color: var(--ink); }
+.slot.ok { border-style: solid; border-color: var(--ok); } .slot.ok .tag { color: var(--ok); }
+.slot.bad { border-style: solid; border-color: var(--bad); } .slot.bad .tag { color: var(--bad); }
+.slot.static { cursor: default; border-style: solid; }
+.slot-tips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; font-size: 12px; color: var(--muted); text-align: center; margin-top: -6px; }
+.warn { background: var(--bad-soft); color: var(--ink); border-radius: var(--r-md); padding: 12px 14px; font-size: 14px; display: grid; gap: 10px; }
+.me { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.me .avatar { width: 64px; height: 64px; font-size: 20px; }
+.me h2 { font-size: 22px; font-weight: 800; }
+.me .meta { color: var(--muted); font-size: 14px; }
+
+/* Documents */
+.session { background: var(--brand); color: var(--brand-ink); border-radius: var(--r-lg); padding: 18px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.session .avatar { width: 56px; height: 56px; font-size: 18px; background: var(--accent); color: var(--accent-ink); }
+.session .who { flex: 1 1 220px; min-width: 0; }
+.session .who small { color: var(--accent); font-weight: 700; font-size: 13px; }
+.session .who h2 { font-size: 24px; font-weight: 800; }
+.session .who p { margin: 2px 0 0; color: var(--brand-muted); font-size: 14px; }
+.session .timer { color: var(--brand-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.docs { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .docs { grid-template-columns: 240px minmax(0, 1fr); align-items: start; } }
+.doc-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+@media (min-width: 900px) { .doc-nav { flex-direction: column; overflow: visible; position: sticky; top: 96px; } }
+.doc-nav button { text-align: left; border: 1px solid var(--line); background: var(--surface); padding: 10px 14px; border-radius: var(--r-md); cursor: pointer; font-weight: 600; white-space: nowrap; display: flex; justify-content: space-between; gap: 10px; }
+.doc-nav button[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.doc-nav small { font-weight: 500; opacity: .8; }
+.doc { max-width: 760px; }
+.doc h2 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+.doc .lead { color: var(--muted); margin: 0 0 18px; }
+.doc h3 { font-size: 16px; font-weight: 700; margin: 22px 0 8px; color: var(--heading); }
+.doc p { margin: 0 0 8px; max-width: 68ch; }
+.doc ul { margin: 0 0 8px; padding-left: 20px; max-width: 68ch; }
+.doc li { margin-bottom: 4px; }
+.doc li::marker { color: var(--accent); }
+.kv { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; margin: 0; }
+.kv div { display: grid; grid-template-columns: minmax(110px, 36%) minmax(0, 1fr); border-top: 1px solid var(--line); }
+.kv div:first-child { border-top: 0; }
+.kv dt { background: var(--sunk); padding: 9px 12px; font-weight: 600; font-size: 14px; }
+.kv dd { margin: 0; padding: 9px 12px; font-size: 14px; }
+.tl { list-style: none; margin: 0; padding: 0; }
+.tl li { display: grid; grid-template-columns: 64px 18px minmax(0, 1fr); gap: 0 10px; }
+.tl time { font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; padding-top: 1px; }
+.tl .rail { position: relative; }
+.tl .rail::before { content: ""; position: absolute; left: 50%; top: 6px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--heading); box-shadow: 0 0 0 3px var(--surface); }
+.tl .rail::after { content: ""; position: absolute; left: 50%; top: 18px; bottom: -2px; width: 2px; margin-left: -1px; background: var(--line); }
+.tl li:last-child .rail::after { display: none; }
+.tl .what { padding-bottom: 18px; }
+.tl .what b { display: block; }
+.tl .what span { color: var(--muted); font-size: 14px; }
+.ck-group { margin-top: 18px; }
+.ck { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line); cursor: pointer; }
+.ck input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--ok); flex: none; }
+.ck .t { flex: 1; min-width: 0; }
+.ck .t span { display: block; font-size: 12px; color: var(--muted); }
+.ck input:checked + .t b { color: var(--muted); text-decoration: line-through; font-weight: 500; }
+.qr { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+.qr-box { background: #FFFFFF; padding: 10px; border-radius: var(--r-md); line-height: 0; }
+.qr-box img, .qr-box canvas { width: 150px; height: 150px; }
+.locked { max-width: 540px; margin: 40px auto; text-align: center; display: grid; gap: 10px; justify-items: center; }
+.locked h2 { font-size: 22px; }
+
+/* Admin */
+.admin-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.admin-head h1 { font-size: 26px; font-weight: 800; flex: 1 1 auto; }
+.subtabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+@media (max-width: 560px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px; text-align: left; cursor: pointer; }
+.stat[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.stat strong { display: block; font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: 13px; color: var(--muted); }
+.stat.ok strong { color: var(--ok); } .stat.wait strong { color: var(--accent); } .stat.warn strong { color: var(--warn); }
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.toolbar .input { flex: 1 1 240px; }
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-top: 1px solid var(--line); flex-wrap: wrap; cursor: pointer; border-radius: var(--r-sm); width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; }
+.row:hover { background: var(--sunk); }
+.row .who { flex: 1 1 200px; min-width: 0; }
+.row .who b { display: block; }
+.row .who span { font-size: 13px; color: var(--muted); }
+.row .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.doc-edit-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.doc-edit-head .input { flex: 1 1 220px; font-weight: 700; }
+textarea.doc-text { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; line-height: 1.55; resize: vertical; min-height: 120px; }
+.settings { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.pin { max-width: 380px; margin: 40px auto; text-align: center; display: grid; gap: 14px; }
+.pin .input { text-align: center; font-size: 26px; letter-spacing: .4em; }
+
+/* Review sheet */
+.modal { position: fixed; inset: 0; background: rgba(8,16,30,.55); display: grid; place-items: center; z-index: 25; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.modal > .panel { max-width: 420px; width: 100%; display: grid; gap: 14px; box-shadow: var(--shadow); }
+.modal .acts { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.modal > .sheet { max-width: 980px; max-height: 100%; overflow-y: auto; gap: 18px; }
+.sheet-head { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.sheet-head .avatar { width: 56px; height: 56px; }
+.sheet-head .who { flex: 1 1 220px; min-width: 0; }
+.sheet-head h2 { font-size: 22px; font-weight: 800; }
+.compare { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .compare { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); } }
+.compare h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--muted); }
+.shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.shots img, .ci-shot img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--r-md); background: var(--sunk); display: block; }
+.ci-list { display: grid; gap: 12px; }
+.ci-shot { display: grid; grid-template-columns: minmax(0, 120px) minmax(0, 1fr); gap: 12px; align-items: start; }
+.ci-shot .noimg { aspect-ratio: 3 / 4; border-radius: var(--r-md); background: var(--sunk); display: grid; place-items: center; color: var(--muted); font-size: 12px; text-align: center; padding: 6px; }
+.ci-shot dl { margin: 0; display: grid; gap: 2px; font-size: 14px; }
+.ci-shot dt { color: var(--muted); font-size: 12px; }
+.ci-shot dd { margin: 0 0 6px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.verdict { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding-top: 14px; border-top: 1px solid var(--line); }
+.verdict .spacer { flex: 1 1 auto; }
+
+/* Camera */
+.modal > .panel.cam { max-width: 640px; }
+.cam-view { aspect-ratio: 4 / 3; max-width: 100%; background: var(--sunk); border-radius: var(--r-md); overflow: hidden; display: grid; place-items: center; position: relative; color: var(--muted); text-align: center; }
+.cam-view video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+.cam-view .oval { position: absolute; width: min(42%, 220px); aspect-ratio: .78; border: 3px dashed rgba(255,255,255,.8); border-radius: 50%; pointer-events: none; }
+.cam-view .msg { padding: 20px; font-size: 14px; display: grid; gap: 8px; justify-items: center; max-width: 44ch; }
+.cam-view .msg b { color: var(--ink); font-size: 15px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 18px; border-radius: 999px; font-weight: 600; font-size: 14px; z-index: 30; max-width: calc(100% - 32px); text-align: center; box-shadow: var(--shadow); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.foot { display: flex; gap: 8px 16px; flex-wrap: wrap; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; padding-block: 0 32px; }
+.foot button { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font-size: 13px; padding: 4px; }
+.setup { max-width: 640px; margin: 24px auto; display: grid; gap: 12px; }
+.setup code { background: var(--sunk); padding: 2px 6px; border-radius: 6px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header class="band">
+  <div class="wrap">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">FSC</div>
+      <div class="brand-text">
+        <div class="brand-name" id="brand-name">Hội thảo tháng 12</div>
+        <div class="brand-venue" id="brand-venue">FSC Tây Hà Nội</div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Chuyển màn hình"></nav>
+    <button class="engine" id="engine" data-s="idle" type="button" aria-live="polite"><span class="dot"></span><span id="engine-text">Nhận diện chưa tải</span></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="db-notice"></div>
+  <div id="view"></div>
+</main>
+<footer class="wrap foot" id="foot"></footer>
+
+<input type="file" id="cam-checkin" accept="image/*" capture="user" class="sr" tabindex="-1" aria-hidden="true">
+<input type="file" id="cam-reg" accept="image/*" capture="user" class="sr" tabindex="-1" aria-hidden="true">
+<div id="overlay"></div>
+
+<script src="vendor/face-api.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ================= Nội dung tài liệu hội thảo (sửa tại đây) ================= */
+/* Tài liệu mẫu: chỉ dùng để nạp lần đầu lên Firebase khi Ban tổ chức đăng nhập.
+   Tài liệu thật nhập trong Quản trị → Tài liệu, lưu ở Firestore (content/docs) và chỉ
+   Ban tổ chức hoặc khách đã check-in đúng ngày hội thảo đọc được. */
+var DOCS = [];
+var SAMPLE_DOCS = [
+  { key: 'chuong-trinh', title: 'Chương trình', note: '8 mục', type: 'timeline', lead: 'Lịch trình buổi hội thảo, theo giờ.',
+    items: [
+      ['07:30', 'Đón khách, check-in bằng khuôn mặt', 'Cổng chính — nhận tài liệu và thẻ đeo'],
+      ['08:00', 'Văn nghệ chào mừng', 'Hội trường tầng 1'],
+      ['08:15', 'Khai mạc, giới thiệu đại biểu', 'Ban Giám hiệu'],
+      ['08:30', 'Dạy minh hoạ: tiết học số hoá', 'Phòng học thông minh 201'],
+      ['09:30', 'Giải lao, tham quan góc trưng bày', 'Sảnh tầng 2'],
+      ['09:50', 'Tham luận và thảo luận nhóm', 'Theo nhóm chuyên môn'],
+      ['11:00', 'Tổng kết, trao đổi ý kiến', 'Hội trường tầng 1'],
+      ['11:30', 'Bế mạc, chụp ảnh lưu niệm', 'Sân trường']
+    ] },
+  { key: 'ke-hoach-bai-day', title: 'Kế hoạch bài dạy', note: 'Mẫu', type: 'sections',
+    lead: 'Kế hoạch bài dạy minh hoạ. Nội dung mẫu, Ban tổ chức thay bằng giáo án thật.',
+    sections: [
+      { h: 'Thông tin chung', kv: [['Môn học', 'Tin học'], ['Lớp', '7'], ['Bài', 'Làm quen với bảng tính điện tử'], ['Thời lượng', '45 phút'], ['Giáo viên', '(Họ tên giáo viên)']] },
+      { h: 'I. Mục tiêu', ul: [
+        'Kiến thức: nêu được các thành phần cơ bản của bảng tính (ô, hàng, cột, trang tính).',
+        'Năng lực: nhập, sửa, định dạng dữ liệu đơn giản; hợp tác nhóm giải quyết nhiệm vụ.',
+        'Phẩm chất: chăm chỉ, trung thực khi báo cáo kết quả, có trách nhiệm với nhóm.'] },
+      { h: 'II. Thiết bị dạy học và học liệu', ul: [
+        'Máy chiếu, máy tính có phần mềm bảng tính.',
+        'Phiếu học tập số 1, số 2; bảng điểm mẫu.',
+        'Nền tảng học trực tuyến để nộp sản phẩm.'] },
+      { h: 'III. Tiến trình dạy học — Hoạt động 1: Mở đầu (5 phút)', p: [
+        'Mục tiêu: tạo hứng thú, đặt vấn đề cần quản lý điểm số của lớp.',
+        'Tổ chức: GV chiếu bảng điểm viết tay, hỏi “Làm sao tính điểm trung bình nhanh và chính xác?”. HS thảo luận cặp đôi.',
+        'Sản phẩm: câu trả lời của HS.'] },
+      { h: 'Hoạt động 2: Hình thành kiến thức (15 phút)', p: [
+        'Mục tiêu: HS nhận biết giao diện bảng tính, ô, địa chỉ ô.',
+        'Tổ chức: GV trình chiếu, HS thực hành theo phiếu học tập số 1.',
+        'Sản phẩm: phiếu học tập số 1 hoàn thành.'] },
+      { h: 'Hoạt động 3: Luyện tập (15 phút)', p: [
+        'Mục tiêu: nhập và chỉnh sửa dữ liệu bảng điểm.',
+        'Tổ chức: làm việc nhóm 4 HS, mỗi nhóm hoàn thiện một bảng điểm.',
+        'Sản phẩm: file bảng tính của nhóm.'] },
+      { h: 'Hoạt động 4: Vận dụng (10 phút)', p: [
+        'Mục tiêu: liên hệ thực tế.',
+        'Tổ chức: HS lập bảng chi tiêu cá nhân trong một tuần, trình bày trước lớp.',
+        'Sản phẩm: bảng chi tiêu và phần trình bày.'] }
+    ],
+    links: [ /* ['Tải giáo án đầy đủ (PDF)', 'https://drive.google.com/...'] */ ] },
+  { key: 'checklist', title: 'Checklist sự kiện', type: 'checklist', lead: 'Ban tổ chức đánh dấu khi hoàn thành; trạng thái đồng bộ cho mọi người.',
+    groups: [
+      ['Trước sự kiện', [
+        ['b1', 'Gửi thư mời kèm link đăng ký khuôn mặt', 'Văn phòng'],
+        ['b2', 'Nhắc khách chưa đăng ký, đăng ký hộ khi cần', 'Ban tổ chức'],
+        ['b3', 'In tài liệu, thẻ đeo, bảng tên đại biểu', 'Văn phòng'],
+        ['b4', 'Kiểm tra âm thanh, máy chiếu, Wi-Fi hội trường', 'IT'],
+        ['b5', 'Chuẩn bị phòng dạy minh hoạ', 'Tổ chuyên môn'],
+        ['b6', 'Duyệt kịch bản MC và chương trình văn nghệ', 'Ban tổ chức']]],
+      ['Ngày diễn ra', [
+        ['d1', 'Đặt thiết bị check-in tại cổng, sạc đầy pin, kiểm tra mạng', 'IT'],
+        ['d2', 'Bố trí lễ tân hỗ trợ khách không nhận diện được', 'Lễ tân'],
+        ['d3', 'Nước uống, hoa, khăn trải bàn đại biểu', 'Hậu cần'],
+        ['d4', 'Chụp ảnh, quay video tư liệu', 'Truyền thông'],
+        ['d5', 'Đối chiếu ảnh check-in với ảnh đăng ký', 'Ban tổ chức']]],
+      ['Sau sự kiện', [
+        ['a1', 'Xuất danh sách check-in, lưu hồ sơ', 'Văn phòng'],
+        ['a2', 'Gửi thư cảm ơn và tài liệu cho khách mời', 'Văn phòng'],
+        ['a3', 'Đăng tin, ảnh lên website và fanpage', 'Truyền thông'],
+        ['a4', 'Xoá dữ liệu khuôn mặt khi không còn sử dụng', 'IT'],
+        ['a5', 'Họp rút kinh nghiệm', 'Ban tổ chức']]]
+    ] },
+  { key: 'thong-tin', title: 'Thông tin chung', type: 'sections', lead: 'Địa điểm, Wi-Fi và liên hệ Ban tổ chức.',
+    sections: [
+      { h: 'Địa điểm', p: ['FSC Tây Hà Nội — Hội trường tầng 1 và các phòng học chức năng.'] },
+      { h: 'Wi-Fi khách', kv: [['Tên mạng', 'FSC-Guest'], ['Mật khẩu', '(Ban tổ chức cập nhật)']] },
+      { h: 'Liên hệ Ban tổ chức', kv: [['Điều phối chung', '(Họ tên — số điện thoại)'], ['Hỗ trợ kỹ thuật', '(Họ tên — số điện thoại)'], ['Lễ tân', '(Họ tên — số điện thoại)']] },
+      { h: 'Lưu ý', ul: [
+        'Vui lòng để điện thoại ở chế độ im lặng trong tiết dạy minh hoạ.',
+        'Khu vực gửi xe ở cổng phụ, có nhân viên hướng dẫn.',
+        'Ảnh khuôn mặt chỉ dùng cho check-in sự kiện và được xoá sau hội thảo.'] }
+    ] }
+];
+
+var PUBLIC_DEFAULTS = { eventName: 'Hội thảo tháng 12', venue: 'FSC Tây Hà Nội', eventDate: '2026-12-04', autoReturn: 120, regOpen: true, regNote: '' };
+var SECRET_DEFAULTS = { pin: '1234', threshold: 0.5 };
+var PHOTO_TIPS = ['Nhìn thẳng', 'Hơi quay trái', 'Hơi quay phải'];
+
+/* ================= Trạng thái ================= */
+var S = {
+  db: null, dbState: 'connecting', uid: null, isAdmin: false, canWrite: null, downloads: null,
+  regs: [], mine: null, minePhotos: null, cfg: Object.assign({}, PUBLIC_DEFAULTS), secret: Object.assign({}, SECRET_DEFAULTS), checklist: {},
+  engine: 'idle', engineErr: '',
+  route: 'dang-ky', docKey: null, docsLink: '', docsState: 'idle', docEdit: null,
+  session: null, admin: false, adminTab: 'list', filter: 'all', query: '',
+  ci: { s: 'idle', msg: '', img: null, fails: 0 },
+  form: null, editingMine: false, detail: null
+};
+var lastTouch = Date.now();
+
+function $(sel, root) { return (root || document).querySelector(sel); }
+function $$(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+function h(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function initials(n) { var w = String(n || '?').trim().split(/\s+/); return w.slice(-2).map(function (x) { return x[0] || ''; }).join('').toUpperCase(); }
+function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd'); }
+function pad(n) { return String(n).padStart(2, '0'); }
+function fmtTime(iso) { var d = new Date(iso); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function fmtDateTime(iso) { var d = new Date(iso); return fmtTime(iso) + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+function regById(id) { for (var i = 0; i < S.regs.length; i++) if (S.regs[i].id === id) return S.regs[i]; return null; }
+function isDataImg(s) { return typeof s === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s); }
+function avatarHtml(r, cls) { return '<div class="avatar' + (cls ? ' ' + cls : '') + '">' + (r && isDataImg(r.avatar) ? '<img src="' + r.avatar + '" alt="">' : h(initials(r && r.name))) + '</div>'; }
+function score(dist) { return dist == null ? null : Math.max(0, Math.min(100, Math.round((1 - dist / 1.2) * 100))); }
+// Ngày theo giờ Việt Nam (UTC+7), dạng YYYY-MM-DD.
+function vnDay(t) { var ms = t == null ? Date.now() : (typeof t === 'number' ? t : Date.parse(t)); return new Date(ms + 7 * 3600e3).toISOString().slice(0, 10); }
+function fmtDay(ymd) { var p = String(ymd || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : ymd; }
+function eventDay() { return S.cfg.eventDate || PUBLIC_DEFAULTS.eventDate; }
+function isEventDay() { return vnDay() === eventDay(); }
+// Khách chỉ mở được Check-in và Tài liệu sau khi check-in bằng khuôn mặt đúng ngày hội thảo.
+function guestUnlocked() { return !!(S.mine && S.mine.checkedInAt && (S.mine.checkedInDay || vnDay(S.mine.checkedInAt)) === eventDay()); }
+function rid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+var toastTimer;
+function toast(msg) {
+  var el = $('#toast');
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.textContent = msg; el.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.hidden = true; }, 2800);
+}
+
+function ask(title, body, okLabel, onOk, danger) {
+  var ov = $('#overlay');
+  var prev = ov.innerHTML;
+  var box = document.createElement('div');
+  box.className = 'modal'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
+  box.innerHTML = '<div class="panel"><h3>' + h(title) + '</h3><p class="muted" style="margin:0">' + h(body) + '</p>' +
+    '<div class="acts"><button class="btn" data-x="no" type="button">Huỷ</button><button class="btn ' + (danger ? 'danger' : 'dark') + '" data-x="yes" type="button">' + h(okLabel) + '</button></div></div>';
+  ov.appendChild(box);
+  box.querySelector('[data-x=no]').onclick = function () { box.remove(); };
+  box.querySelector('[data-x=yes]').onclick = function () { box.remove(); onOk(); };
+  box.querySelector('[data-x=yes]').focus();
+  return prev;
+}
+
+/* ================= Dữ liệu dùng chung =================
+   regs/<id>        thông tin đăng ký + đặc trưng khuôn mặt + ảnh nhỏ đại diện (khách tự ghi bản của mình)
+   regphotos/<id>   3 ảnh đăng ký
+   checkins/<id>    mỗi lượt check-in: ảnh chụp tại cổng, giờ, độ khớp (chỉ Ban tổ chức đọc)
+   config/settings  thông tin sự kiện công khai; secret/settings: PIN, ngưỡng (chỉ Ban tổ chức) */
+var subs = { regs: null, mine: null };
+var unsubs = [];
+function connect() {
+  var cfg = window.FSC_FIREBASE_CONFIG;
+  if (!window.firebase || !firebase.initializeApp) { S.dbState = 'offline'; renderNotice(); renderNav(); render(); return; }
+  if (!cfg || !cfg.apiKey || /DIEN_/.test(cfg.apiKey)) { S.dbState = 'setup'; renderNotice(); renderNav(); render(); return; }
+  try { firebase.initializeApp(cfg); } catch (e) { S.dbState = 'setup'; S.authErr = e.message; renderNotice(); render(); return; }
+  S.auth = firebase.auth();
+  S.db = firebase.firestore();
+  S.auth.onAuthStateChanged(function (u) {
+    if (!u) {
+      S.auth.signInAnonymously().catch(function (e) { S.dbState = 'none'; S.authErr = (e && e.code) || ''; renderNotice(); renderNav(); render(); });
+      return;
+    }
+    onUser(u);
+  });
+  if (S.auth.getRedirectResult) S.auth.getRedirectResult().catch(function (e) { loginFailed(e); });
+}
+function adminEmails() { return (window.FSC_ADMIN_EMAILS || []).map(function (x) { return String(x).trim().toLowerCase(); }); }
+function onUser(u) {
+  var db = S.db;
+  unsubs.forEach(function (f) { try { f(); } catch (e) {} }); unsubs = [];
+  S.uid = u.uid; S.email = u.email || null; S.isAnon = !!u.isAnonymous;
+  S.isAdmin = !!(u.email && u.emailVerified && adminEmails().indexOf(u.email.toLowerCase()) >= 0);
+  S.mine = null; S.minePhotos = null; S.regs = []; S.form = null; S.editingMine = false; S.admin = false; S.session = null;
+  S.dbState = 'ok';
+  unsubs.push(db.doc('config/settings').onSnapshot(function (d) { S.cfg = Object.assign({}, PUBLIC_DEFAULTS, d.exists ? d.data() : {}); applyBrand(); renderNav(); if ((S.route === 'dang-ky' && !S.form) || S.route === 'checkin') render(); }, function () {}));
+  var lastMine = '';
+  unsubs.push(db.doc('regs/' + S.uid).onSnapshot(function (d) {
+    var next = d.exists ? Object.assign({ id: d.id }, d.data()) : null;
+    var key = JSON.stringify(next);
+    if (key === lastMine) return;
+    lastMine = key; S.mine = next;
+    if (guestUnlocked()) watchDocs();
+    renderNav();
+    if (S.route === 'dang-ky' && !S.editingMine) { if (S.mine) S.form = null; render(); }
+    else if (S.route !== 'dang-ky' && !S.isAdmin) route();
+  }, function () {}));
+  if (S.isAdmin) {
+    db.doc('config/settings').get().then(function (d) { if (!d.exists) return db.doc('config/settings').set(PUBLIC_DEFAULTS); }).catch(function () {});
+    watchDocs();
+    unsubs.push(db.doc('secret/settings').onSnapshot(function (d) { S.secret = Object.assign({}, SECRET_DEFAULTS, d.exists ? d.data() : {}); }, function () {}));
+    unsubs.push(db.collection('regs').onSnapshot(function (snap) {
+      S.regs = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+      refreshData();
+    }, function (e) { S.dbState = 'lost'; S.authErr = (e && e.code) || ''; renderNotice(); }));
+  }
+  renderNotice(); renderNav(); renderFoot();
+  if (!location.hash) S.route = S.isAdmin ? 'checkin' : 'dang-ky';
+  route();
+}
+
+/* Tài liệu: chỉ đăng ký nghe khi là Ban tổ chức hoặc khách đã mở khoá (quy tắc Firestore kiểm tra lại). */
+var docsUnsub = null, seeded = false;
+function watchDocs() {
+  if (docsUnsub || !S.db) return;
+  S.docsState = 'loading';
+  var u1 = S.db.doc('content/docs').onSnapshot(function (d) {
+    if (!d.exists) {
+      DOCS = []; S.docsLink = ''; S.docsState = 'empty';
+      if (S.isAdmin && !seeded) { seeded = true; S.db.doc('content/docs').set({ docs: SAMPLE_DOCS, docsLink: '', updatedAt: new Date().toISOString() }).catch(function () {}); }
+    } else { var x = d.data(); DOCS = x.docs || []; S.docsLink = x.docsLink || ''; S.docsState = 'ok'; }
+    if (!S.docKey || !DOCS.some(function (dd) { return dd.key === S.docKey; })) S.docKey = DOCS[0] ? DOCS[0].key : null;
+    if (S.route === 'tai-lieu' || (S.route === 'checkin' && !S.isAdmin) || (S.route === 'quan-tri' && S.adminTab === 'docs' && !S.docEdit)) render();
+  }, function () { S.docsState = 'locked'; if (docsUnsub) docsUnsub(); docsUnsub = null; if (S.route === 'tai-lieu') render(); });
+  var u2 = S.db.doc('content/checklist').onSnapshot(function (d) {
+    S.checklist = (d.exists && d.data().done) ? Object.assign({}, d.data().done) : {};
+    if (S.route === 'tai-lieu') refreshChecklist();
+  }, function () {});
+  docsUnsub = function () { u1(); u2(); };
+  unsubs.push(function () { if (docsUnsub) docsUnsub(); docsUnsub = null; DOCS = []; S.docsState = 'idle'; S.docEdit = null; });
+}
+
+/* Ban tổ chức đăng nhập bằng tài khoản Google có trong danh sách FSC_ADMIN_EMAILS. */
+function login() {
+  var p = new firebase.auth.GoogleAuthProvider();
+  p.setCustomParameters({ prompt: 'select_account' });
+  S.auth.signInWithPopup(p).then(function (r) {
+    var em = r && r.user && r.user.email;
+    if (em && adminEmails().indexOf(em.toLowerCase()) < 0) toast('Tài khoản ' + em + ' không có trong danh sách Ban tổ chức.');
+    else toast('Đã đăng nhập Ban tổ chức');
+  }).catch(function (e) {
+    if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) S.auth.signInWithRedirect(p);
+    else loginFailed(e);
+  });
+}
+function loginFailed(e) {
+  if (!e || e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
+  if (e.code === 'auth/unauthorized-domain') toast('Tên miền này chưa được thêm vào Firebase (Authentication → Settings → Authorized domains).');
+  else if (e.code === 'auth/operation-not-allowed') toast('Chưa bật đăng nhập Google trong Firebase (Authentication → Sign-in method).');
+  else toast('Không đăng nhập được: ' + (e.message || e.code));
+}
+function logout() { S.auth.signOut().then(function () { toast('Đã đăng xuất'); go('dang-ky'); }); }
+function renderFoot() {
+  var f = $('#foot'); if (!f) return;
+  if (S.dbState !== 'ok') { f.innerHTML = ''; return; }
+  f.innerHTML = S.isAnon || !S.email
+    ? '<span>Ban tổ chức?</span><button type="button" id="login">Đăng nhập bằng Google</button>'
+    : '<span>Đang đăng nhập: ' + h(S.email) + (S.isAdmin ? ' (Ban tổ chức)' : '') + '</span><button type="button" id="logout">Đăng xuất</button>';
+  var b = $('#login'); if (b) b.onclick = login;
+  b = $('#logout'); if (b) b.onclick = logout;
+}
+
+function writeFailed(e) {
+  if (e && (e.code === 'permission-denied' || e.code === 'invalid_argument')) toast('Không có quyền thực hiện thao tác này. Nếu đã check-in, thông tin không sửa được nữa.');
+  else if (e && e.code === 'resource-exhausted') toast('Hệ thống đang quá tải hoặc hết hạn mức miễn phí trong ngày. Thử lại sau.');
+  else if (e && e.code === 'quota_exceeded') toast('Bộ nhớ dữ liệu đã đầy. Ban tổ chức cần xoá bớt dữ liệu cũ.');
+  else toast('Không lưu được. Kiểm tra kết nối mạng rồi thử lại.');
+}
+
+function renderNotice() {
+  var el = $('#db-notice'), msg = '';
+  if (S.dbState === 'lost') msg = S.authErr === 'permission-denied'
+    ? '<strong>Firebase từ chối quyền đọc danh sách.</strong> Kiểm tra lại email Ban tổ chức trong Rules của Firestore có trùng với file firebase-config.js không.'
+    : '<strong>Mất kết nối dữ liệu.</strong> Tải lại trang để kết nối lại.';
+  else if (S.dbState === 'offline') msg = '<strong>Không tải được Firebase.</strong> Kiểm tra kết nối Internet rồi tải lại trang.';
+  else if (S.dbState === 'none') msg = S.authErr === 'auth/operation-not-allowed' || S.authErr === 'auth/admin-restricted-operation'
+    ? '<strong>Chưa bật đăng nhập ẩn danh.</strong> Vào Firebase → Authentication → Sign-in method, bật Anonymous.'
+    : '<strong>Chưa kết nối được máy chủ.</strong> Kiểm tra mạng rồi tải lại trang.';
+  el.innerHTML = msg ? '<div class="notice">' + msg + '</div>' : '';
+}
+
+function applyBrand() {
+  $('#brand-name').textContent = S.cfg.eventName || PUBLIC_DEFAULTS.eventName;
+  $('#brand-venue').textContent = S.cfg.venue || '';
+}
+
+function renderNav() {
+  var items = S.isAdmin ? [['dang-ky', 'Đăng ký'], ['checkin', 'Check-in'], ['tai-lieu', 'Tài liệu'], ['quan-tri', 'Quản trị']]
+    : guestUnlocked() ? [['dang-ky', 'Đăng ký'], ['checkin', 'Check-in'], ['tai-lieu', 'Tài liệu']] : [];
+  var nav = $('#tabs');
+  nav.hidden = !items.length;
+  nav.innerHTML = items.map(function (x) { return '<a href="#' + x[0] + '" data-nav="' + x[0] + '"' + (S.route === x[0] ? ' aria-current="page"' : '') + '>' + x[1] + '</a>'; }).join('');
+}
+
+/* ================= Bộ nhận diện khuôn mặt ================= */
+var enginePromise = null;
+function setEngine(s, err) {
+  S.engine = s; S.engineErr = err || '';
+  var el = $('#engine'); el.dataset.s = s;
+  $('#engine-text').textContent = s === 'ready' ? 'Nhận diện sẵn sàng' : s === 'loading' ? 'Đang tải nhận diện…' : s === 'error' ? 'Lỗi nhận diện · thử lại' : 'Nhận diện chưa tải';
+  el.title = err || '';
+}
+function waitFor(test, ms) {
+  return new Promise(function (res, rej) {
+    var t0 = Date.now();
+    (function tick() { if (test()) return res(); if (Date.now() - t0 > ms) return rej(new Error('Không tải được thư viện nhận diện. Kiểm tra kết nối mạng.')); setTimeout(tick, 150); })();
+  });
+}
+function loadEngine() {
+  if (enginePromise) return enginePromise;
+  setEngine('loading');
+  enginePromise = waitFor(function () { return !!window.faceapi; }, 25000).then(function () {
+    var fa = window.faceapi;
+    return fa.tf.setBackend('webgl').catch(function () { return false; }).then(function (ok) {
+      if (!ok) return fa.tf.setBackend('cpu');
+    }).then(function () { return fa.tf.ready(); }).then(function () {
+      return Promise.all([
+        fa.nets.tinyFaceDetector.loadFromUri('model'),
+        fa.nets.faceLandmark68Net.loadFromUri('model'),
+        fa.nets.faceRecognitionNet.loadFromUri('model')
+      ]);
+    });
+  }).then(function () { setEngine('ready'); refreshEngineBound(); }).catch(function (e) {
+    enginePromise = null; setEngine('error', e && e.message ? e.message : String(e)); refreshEngineBound();
+    throw e;
+  });
+  return enginePromise;
+}
+function refreshEngineBound() {
+  $$('[data-needs-engine]').forEach(function (b) { b.disabled = S.engine !== 'ready' || b.dataset.block === '1'; });
+  var n = $('#engine-note'); if (n) n.hidden = S.engine === 'ready';
+}
+
+function fileToCanvas(file) {
+  return new Promise(function (resolve, reject) {
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      var max = 900, sc = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      var c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      resolve({ canvas: c, url: url });
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Không đọc được ảnh. Hãy chụp lại bằng camera (ảnh JPG hoặc PNG).')); };
+    img.src = url;
+  });
+}
+// Ảnh JPEG nhỏ gọn để lưu: cạnh dài tối đa maxSide.
+function toJpeg(canvas, maxSide, q) {
+  var sc = Math.min(1, maxSide / Math.max(canvas.width, canvas.height));
+  var c = document.createElement('canvas');
+  c.width = Math.round(canvas.width * sc); c.height = Math.round(canvas.height * sc);
+  c.getContext('2d').drawImage(canvas, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', q);
+}
+// Ảnh đại diện vuông, cắt quanh khuôn mặt.
+function faceThumb(canvas, box, size) {
+  var side = Math.min(Math.max(box.width, box.height) * 1.6, canvas.width, canvas.height);
+  var cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+  var sx = Math.max(0, Math.min(canvas.width - side, cx - side / 2)), sy = Math.max(0, Math.min(canvas.height - side, cy - side / 2));
+  var c = document.createElement('canvas'); c.width = size; c.height = size;
+  c.getContext('2d').drawImage(canvas, sx, sy, side, side, 0, 0, size, size);
+  return c.toDataURL('image/jpeg', 0.8);
+}
+
+function describe(canvas) {
+  return loadEngine().then(function () {
+    var fa = window.faceapi;
+    var opts = new fa.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.45 });
+    return fa.detectAllFaces(canvas, opts).withFaceLandmarks().withFaceDescriptors();
+  }).then(function (dets) {
+    if (!dets.length) { var e = new Error('Không thấy khuôn mặt. Nhìn thẳng vào camera, đứng nơi đủ sáng.'); e.code = 'NO_FACE'; throw e; }
+    dets.sort(function (a, b) { return b.detection.box.area - a.detection.box.area; });
+    var d = dets[0], box = d.detection.box;
+    if (box.width < canvas.width * 0.12) { var e2 = new Error('Khuôn mặt quá nhỏ trong ảnh. Hãy đứng gần camera hơn.'); e2.code = 'TOO_FAR'; throw e2; }
+    // Chỉ tính những khuôn mặt đủ lớn; người đi ngang phía sau không bị tính.
+    var big = dets.filter(function (x) { return x.detection.box.area >= box.area * 0.35; }).length;
+    return { faces: big, box: { x: box.x, y: box.y, width: box.width, height: box.height },
+      descriptor: Array.prototype.map.call(d.descriptor, function (v) { return Math.round(v * 1e5) / 1e5; }) };
+  });
+}
+
+function distance(a, b) { var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - b[i]; s += d * d; } return Math.sqrt(s); }
+function bestMatch(desc, regs, threshold, exceptId) {
+  var best = null;
+  regs.forEach(function (r) {
+    if (r.id === exceptId) return;
+    (r.faces || []).forEach(function (f) {
+      if (!f || !f.v || f.v.length !== desc.length) return;
+      var dist = distance(desc, f.v);
+      if (!best || dist < best.distance) best = { reg: r, distance: dist };
+    });
+  });
+  if (best && best.distance <= threshold) return best;
+  return { reg: null, distance: best ? best.distance : null };
+}
+
+/* ================= Điều hướng ================= */
+var ROUTES = ['dang-ky', 'checkin', 'tai-lieu', 'quan-tri'];
+function route() {
+  var r = (location.hash || '').replace('#', '');
+  if (ROUTES.indexOf(r) < 0) r = S.isAdmin ? 'checkin' : 'dang-ky';
+  if (!S.isAdmin && (r === 'quan-tri' || ((r === 'checkin' || r === 'tai-lieu') && !guestUnlocked()))) r = 'dang-ky';
+  S.route = r;
+  renderNav();
+  render();
+  window.scrollTo(0, 0);
+  if (r === 'dang-ky' || r === 'checkin' || (r === 'quan-tri' && S.admin)) setTimeout(function () { loadEngine().catch(function () {}); }, 300);
+}
+function go(r) { if (location.hash === '#' + r) route(); else location.hash = r; }
+
+function render() {
+  syncForm(); syncDocEdit(); // giữ lại những gì người dùng đang gõ trước khi vẽ lại
+  var v = $('#view');
+  if (S.route === 'tai-lieu') v.innerHTML = viewDocs();
+  else if (S.route === 'quan-tri') v.innerHTML = viewAdmin();
+  else if (S.route === 'checkin') v.innerHTML = S.isAdmin ? viewCheckin() : viewGuestCheckin();
+  else v.innerHTML = viewRegisterPage();
+  bind();
+  refreshData();
+  refreshEngineBound();
+}
+
+/* ================= Trang đăng ký (khách tự đăng ký) ================= */
+function viewSetup() {
+  return '<section class="panel setup"><div class="eyebrow">Cài đặt lần đầu</div><h1 class="lead-h">Chưa kết nối Firebase</h1>' +
+    '<p class="muted" style="margin:0">Trang cần một dự án Firebase để lưu đăng ký và check-in. Mở file <code>firebase-config.js</code> trong kho GitHub, dán cấu hình Firebase của bạn vào rồi lưu lại. Xem các bước trong file <code>README.md</code>.</p></section>';
+}
+function viewRegisterPage() {
+  var intro = '<div class="eyebrow">Đăng ký trước hội thảo</div><h1 class="lead-h" style="margin-top:6px">Đăng ký khuôn mặt để check-in</h1>' +
+    '<p class="lead-p">Điền thông tin và chụp 3 ảnh khuôn mặt. Ngày <b>' + fmtDay(eventDay()) + '</b>, quý khách chỉ cần nhìn vào camera tại cổng trường là được check-in, sau đó mục Check-in và Tài liệu hội thảo sẽ mở trên trang này.</p>';
+  if (S.dbState === 'connecting') return '<section class="panel">' + intro + '<p class="muted" style="margin-top:16px">Đang tải…</p></section>';
+  if (S.dbState === 'setup') return viewSetup();
+  if (S.dbState !== 'ok' || !S.uid) {
+    return '<section class="panel locked">' + intro +
+      '<div class="notice" style="margin:8px 0 0;text-align:left"><strong>Chưa kết nối được máy chủ.</strong> Kiểm tra kết nối Internet rồi tải lại trang. Nếu vẫn không được, quý khách vui lòng đăng ký tại bàn lễ tân trong ngày hội thảo (mất khoảng 1 phút).</div></section>';
+  }
+  if (S.isAdmin) intro = '<div class="notice" style="margin:0 0 16px"><strong>Bạn đang xem với quyền Ban tổ chức.</strong> Đây là trang khách mời sẽ thấy khi mở link (khách không thấy các tab Check-in, Tài liệu, Quản trị). Đăng ký ở đây sẽ tạo hồ sơ cho chính tài khoản của bạn, xoá được trong Quản trị.</div>' + intro;
+  if (S.mine && !S.editingMine) return viewMine(intro);
+  if (!S.cfg.regOpen && !S.isAdmin) {
+    return '<section class="panel locked">' + intro + '<div class="notice" style="margin:8px 0 0"><strong>Đã đóng đăng ký trực tuyến.</strong> Vui lòng đăng ký tại bàn lễ tân trong ngày hội thảo.</div></section>';
+  }
+  if (!S.form || S.form.mode !== 'self') S.form = newForm('self', S.mine);
+  return '<div class="two even">' +
+    '<section class="panel">' + intro +
+      (S.cfg.regNote ? '<div class="notice" style="margin:16px 0 0">' + h(S.cfg.regNote) + '</div>' : '') +
+      '<ol class="steps" style="grid-template-columns:minmax(0,1fr)"><li><b>1</b>Điền họ tên, chức vụ, trường hoặc đơn vị công tác</li><li><b>2</b>Chụp 3 ảnh: nhìn thẳng, hơi quay trái, hơi quay phải</li><li><b>3</b>Khi đến hội thảo, Thầy/Cô vui lòng nhìn vào camera tại cổng để check-in</li></ol>' +
+      '<p class="hint" style="margin-top:16px">Ảnh chỉ Ban tổ chức xem được, dùng để check-in và đối chiếu, được xoá sau hội thảo.</p>' +
+    '</section>' + formHtml() + '</div>';
+}
+
+function viewMine(intro) {
+  var r = S.mine, photos = S.minePhotos;
+  if (photos === null && !viewMine.loading) {
+    viewMine.loading = true;
+    S.db.doc('regphotos/' + r.id).get().then(function (d) { S.minePhotos = d.exists ? (d.data().photos || []) : []; viewMine.loading = false; if (S.route === 'dang-ky' && !S.form) render(); }).catch(function () { S.minePhotos = []; viewMine.loading = false; });
+  }
+  var status = guestUnlocked()
+    ? '<div class="notice okay" style="margin:0"><strong>Đã check-in lúc ' + fmtTime(r.checkedInAt) + ' ngày ' + fmtDay(eventDay()) + '.</strong> Mục Check-in và Tài liệu đã mở cho quý khách. <a href="#tai-lieu">Xem tài liệu</a></div>'
+    : '<div class="notice okay" style="margin:0"><strong>Đã đăng ký thành công.</strong> Ngày ' + fmtDay(eventDay()) + ', quý khách nhìn vào camera tại cổng trường để check-in. Sau khi check-in, tài liệu hội thảo sẽ mở ngay trên trang này.</div>';
+  var shots = (photos || []).filter(isDataImg).map(function (p, i) { return '<div class="slot static ok"><img src="' + p + '" alt="Ảnh đăng ký ' + (i + 1) + '"><span class="tag">' + PHOTO_TIPS[i] + '</span></div>'; }).join('');
+  return '<div class="two even"><section class="panel">' + intro + '</section>' +
+    '<section class="panel form"><div class="me">' + avatarHtml(r) + '<div><h2>' + h(r.name) + '</h2><div class="meta">' + h([r.position, r.org].filter(Boolean).join(' · ')) + '</div></div></div>' +
+    status +
+    '<div class="photos">' + (photos === null ? '<p class="muted">Đang tải ảnh…</p>' : shots) + '</div>' +
+    (r.checkedInAt ? '' : '<div class="chips"><button class="btn" type="button" id="edit-mine">Sửa thông tin hoặc chụp lại</button></div>') +
+    '</section></div>';
+}
+
+/* --- Biểu mẫu đăng ký dùng chung (khách tự đăng ký / Ban tổ chức đăng ký hộ) --- */
+function newForm(mode, r) {
+  return { mode: mode, id: r ? r.id : null, name: r ? r.name || '' : '', position: r ? r.position || '' : '', org: r ? r.org || '' : '',
+    consent: !!r, slots: [null, null, null], keepOld: !!r, slotIdx: 0, dup: null, saving: false };
+}
+function formHtml() {
+  var f = S.form, ready = S.engine === 'ready';
+  var slots = f.slots.map(function (s, i) {
+    if (!s) return '<button class="slot" type="button" data-slot="' + i + '" data-needs-engine' + (ready ? '' : ' disabled') + '><span class="plus">+</span>' + PHOTO_TIPS[i] + '</button>';
+    return '<button class="slot ' + (s.state === 'ok' ? 'ok' : s.state === 'bad' ? 'bad' : '') + '" type="button" data-slot="' + i + '" data-needs-engine' + (ready && s.state !== 'busy' ? '' : ' disabled') + ' aria-label="Chụp lại ảnh ' + (i + 1) + '">' +
+      (s.preview ? '<img src="' + h(s.preview) + '" alt="">' : '') + '<span class="tag">' + h(s.label) + '</span></button>';
+  }).join('');
+  var editing = !!f.id;
+  var title = f.mode === 'desk' ? (editing ? 'Cập nhật đăng ký' : 'Đăng ký hộ khách mời') : (editing ? 'Sửa đăng ký' : 'Thông tin đăng ký');
+  var dup = f.dup ? '<div class="warn"><span>Khuôn mặt này rất giống <b>' + h(f.dup) + '</b> đã đăng ký. Có chắc đây là người khác?</span><div class="chips"><button class="btn sm" type="button" id="dup-no">Kiểm tra lại</button><button class="btn sm dark" type="button" id="dup-yes">Vẫn lưu</button></div></div>' : '';
+  return '<form class="panel form" id="reg-form" novalidate><h2 style="font-size:20px;font-weight:800">' + title + '</h2>' +
+    '<div class="field"><label for="f-name">Họ và tên</label><input class="input" id="f-name" autocomplete="name" value="' + h(f.name) + '" placeholder="Nguyễn Thị Lan"></div>' +
+    '<div class="field"><label for="f-pos">Chức vụ</label><input class="input" id="f-pos" value="' + h(f.position) + '" placeholder="Giáo viên Tin học, Hiệu phó…"></div>' +
+    '<div class="field"><label for="f-org">Trường / Đơn vị công tác</label><input class="input" id="f-org" autocomplete="organization" value="' + h(f.org) + '" placeholder="THPT FPT Tây Hà Nội"></div>' +
+    '<div class="field"><label>Ảnh khuôn mặt (đủ 3 ảnh)</label><div class="photos">' + slots + '</div>' +
+    (editing && f.keepOld ? '<p class="hint">Để trống nếu muốn giữ 3 ảnh cũ. Chụp ảnh mới thì cần chụp đủ cả 3.</p>' : '<p class="hint">Chạm vào từng ô để chụp. Đứng nơi đủ sáng, không đeo khẩu trang hay kính râm, chỉ một người trong khung.</p>') +
+    '<p class="hint" id="engine-note"' + (ready ? ' hidden' : '') + '>Đang tải bộ nhận diện khuôn mặt (khoảng 8 MB), các ô chụp sẽ bật khi sẵn sàng.</p></div>' +
+    (f.mode === 'self' ? '<label class="check"><input type="checkbox" id="f-consent"' + (f.consent ? ' checked' : '') + '><span>Tôi đồng ý để Ban tổ chức dùng ảnh khuôn mặt của tôi cho việc check-in và đối chiếu tại hội thảo.</span></label>' : '') +
+    dup +
+    '<div class="chips"><button class="btn primary big" type="submit" style="flex:1 1 220px"' + (f.saving ? ' disabled' : '') + '>' + (f.saving ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Gửi đăng ký') + '</button>' +
+    (editing || f.mode === 'desk' ? '<button class="btn" type="button" id="form-cancel">Huỷ</button>' : '') + '</div></form>';
+}
+function syncForm() {
+  var f = S.form; if (!f || !$('#f-name')) return;
+  f.name = $('#f-name').value; f.position = $('#f-pos').value; f.org = $('#f-org').value;
+  var c = $('#f-consent'); if (c) f.consent = c.checked;
+}
+function onSlotPhoto(file) {
+  var f = S.form; if (!f) return;
+  syncForm();
+  var i = f.slotIdx, old = f.slots[i];
+  if (old && old.preview) URL.revokeObjectURL(old.preview);
+  var s = { state: 'busy', label: 'Đang kiểm tra…', preview: null };
+  f.slots[i] = s; f.dup = null; render();
+  fileToCanvas(file).then(function (r) {
+    s.preview = r.url; render();
+    return describe(r.canvas).then(function (d) {
+      if (d.faces > 1) { s.state = 'bad'; s.label = 'Nhiều người'; toast('Có nhiều người trong ảnh. Chỉ để một người trong khung.'); }
+      else { s.state = 'ok'; s.label = 'Đạt'; s.v = d.descriptor; s.photo = toJpeg(r.canvas, 420, 0.72); s.thumb = faceThumb(r.canvas, d.box, 112); }
+      render();
+    });
+  }).catch(function (e) {
+    s.state = 'bad'; s.label = e && e.code === 'TOO_FAR' ? 'Mặt quá nhỏ' : e && e.code === 'NO_FACE' ? 'Không thấy mặt' : 'Lỗi ảnh';
+    toast(e && e.message ? e.message : 'Ảnh không dùng được');
+    render();
+  });
+}
+
+function submitForm(force) {
+  var f = S.form; syncForm();
+  var good = f.slots.filter(function (s) { return s && s.state === 'ok'; });
+  var anyNew = f.slots.some(function (s) { return !!s; });
+  var useOld = f.id && f.keepOld && !anyNew;
+  if (!f.name.trim()) { toast('Vui lòng nhập họ và tên.'); $('#f-name').focus(); return; }
+  if (!f.position.trim()) { toast('Vui lòng nhập chức vụ.'); $('#f-pos').focus(); return; }
+  if (!f.org.trim()) { toast('Vui lòng nhập trường hoặc đơn vị công tác.'); $('#f-org').focus(); return; }
+  if (!useOld && good.length < 3) { toast('Cần đủ 3 ảnh khuôn mặt đạt yêu cầu (' + good.length + '/3).'); return; }
+  if (f.mode === 'self' && !f.consent) { toast('Vui lòng đánh dấu đồng ý sử dụng ảnh.'); return; }
+  if (!S.db) { toast('Chưa kết nối dữ liệu.'); return; }
+  if (f.mode === 'desk' && !useOld && !force) {
+    var m = bestMatch(good[0].v, S.regs, (Number(S.secret.threshold) || SECRET_DEFAULTS.threshold) * 0.9, f.id);
+    if (m.reg) { f.dup = m.reg.name; render(); return; }
+  }
+  var id = f.id || (f.mode === 'self' ? S.uid : 'desk-' + rid());
+  var now = new Date().toISOString();
+  var base = { name: f.name.trim(), position: f.position.trim(), org: f.org.trim(), updatedAt: now };
+  if (!useOld) { base.faces = good.map(function (s) { return { v: s.v }; }); base.avatar = good[0].thumb; }
+  f.saving = true; render();
+  var regRef = S.db.doc('regs/' + id), photoRef = S.db.doc('regphotos/' + id);
+  var p;
+  if (f.id) p = regRef.update(base);
+  else { base.createdAt = now; base.source = f.mode; base.checkedInAt = null; base.consent = f.mode === 'self' ? now : 'desk'; p = regRef.set(base); }
+  p.then(function () { return useOld ? null : photoRef.set({ photos: good.map(function (s) { return s.photo; }), updatedAt: now }); })
+  .then(function () {
+    f.slots.forEach(function (s) { if (s && s.preview) URL.revokeObjectURL(s.preview); });
+    toast(f.mode === 'self' ? 'Đã gửi đăng ký. Hẹn gặp quý khách tại hội thảo!' : (f.id ? 'Đã cập nhật ' : 'Đã đăng ký ') + base.name);
+    if (f.mode === 'self') {
+      S.mine = Object.assign({}, S.mine || {}, base, { id: id });
+      S.form = null; S.editingMine = false; S.minePhotos = useOld ? S.minePhotos : good.map(function (s) { return s.photo; });
+    }
+    else { S.form = newForm('desk'); if (f.id) { S.adminTab = 'list'; } }
+    render();
+  }).catch(function (e) { f.saving = false; render(); writeFailed(e); });
+}
+
+/* ================= Màn check-in tại cổng (thiết bị Ban tổ chức) ================= */
+function viewCheckin() {
+  var ci = S.ci, ready = S.engine === 'ready';
+  var msg = ci.s === 'busy' ? '<span class="spinner" aria-hidden="true"></span>' + h(ci.msg)
+          : ci.msg ? h(ci.msg) : (ready ? 'Bấm nút bên dưới để chụp ảnh khuôn mặt' : 'Đang chuẩn bị bộ nhận diện…');
+  var help = ci.fails >= 2 ? '<div class="notice" style="margin:14px 0 0"><strong>Chưa nhận diện được?</strong> Quý khách vui lòng đến bàn lễ tân để được hỗ trợ.</div>' : '';
+  var test = isEventDay() ? '' : '<div class="notice"><strong>Chế độ thử.</strong> Hôm nay chưa phải ngày hội thảo (' + fmtDay(eventDay()) + '). Nhận diện vẫn chạy để kiểm tra, nhưng không ghi check-in và không mở tài liệu cho khách.</div>';
+  return test + '<div class="two">' +
+    '<section class="panel">' +
+      '<div class="eyebrow">Check-in tại cổng</div><h1 class="lead-h" style="margin-top:6px">Chào mừng quý khách</h1>' +
+      '<p class="lead-p">Chụp một ảnh khuôn mặt để check-in. Khi được nhận diện, tài liệu hội thảo sẽ mở ra cho quý khách.</p>' +
+      '<div class="stage" id="stage" data-s="' + h(ci.s) + '">' +
+        (ci.img ? '<img class="shot" src="' + h(ci.img) + '" alt="Ảnh vừa chụp">' : '<div class="guide" aria-hidden="true"></div>') +
+        '<div class="stage-msg" aria-live="polite">' + msg + '</div>' +
+      '</div>' + help +
+      '<div class="actions"><button class="btn primary big" id="ci-shoot" type="button" data-needs-engine' + (ci.s === 'busy' ? ' data-block="1"' : '') + (!ready || ci.s === 'busy' ? ' disabled' : '') + '>' + (ci.s === 'fail' || ci.s === 'ok' ? 'Chụp lại' : 'Chụp ảnh check-in') + '</button></div>' +
+      '<ol class="steps"><li><b>1</b>Bấm nút, camera trước sẽ mở</li><li><b>2</b>Nhìn thẳng, chụp một ảnh rõ mặt</li><li><b>3</b>Xem tài liệu dành cho quý khách</li></ol>' +
+    '</section>' +
+    '<aside class="panel"><div class="eyebrow">Đã check-in</div>' +
+      '<div class="counter" style="margin-top:8px"><strong id="c-in">0</strong><span class="muted" id="c-total">/ 0 khách đã đăng ký</span></div>' +
+      '<div class="bar"><i id="c-bar" style="width:0"></i></div><ul class="feed" id="feed"></ul></aside>' +
+  '</div>';
+}
+
+/* --- Mục Check-in trên điện thoại của khách (chỉ hiện sau khi check-in đúng ngày) --- */
+function viewGuestCheckin() {
+  var r = S.mine;
+  return '<div class="two even"><section class="panel form"><div class="eyebrow">Check-in của quý khách</div>' +
+    '<div class="me">' + avatarHtml(r) + '<div><h2>' + h(r.name) + '</h2><div class="meta">' + h([r.position, r.org].filter(Boolean).join(' · ')) + '</div></div></div>' +
+    '<div class="notice okay" style="margin:0"><strong>Đã check-in thành công.</strong> Ban tổ chức đã ghi nhận quý khách có mặt tại ' + h(S.cfg.venue || 'trường') + '.</div>' +
+    '<dl class="kv"><div><dt>Ngày</dt><dd>' + fmtDay(vnDay(r.checkedInAt)) + '</dd></div><div><dt>Giờ check-in</dt><dd>' + fmtTime(r.checkedInAt) + '</dd></div>' +
+    '<div><dt>Hình thức</dt><dd>' + (r.method === 'manual' ? 'Lễ tân hỗ trợ tại bàn' : 'Nhận diện khuôn mặt tại cổng') + '</dd></div>' +
+    '<div><dt>Sự kiện</dt><dd>' + h(S.cfg.eventName) + '</dd></div></dl>' +
+    '<div class="chips"><a class="btn primary" href="#tai-lieu">Xem tài liệu hội thảo</a></div></section>' +
+    '<section class="panel"><div class="eyebrow">Hôm nay</div><h2 style="font-size:20px;font-weight:800;margin:6px 0 12px">Chương trình hội thảo</h2>' +
+    (DOCS[0] ? docBody(DOCS[0]).replace(/^<h2>[^<]*<\/h2>(<p class="lead">[^<]*<\/p>)?/, '') : '<p class="muted">' + (S.docsState === 'loading' || S.docsState === 'idle' ? 'Đang tải…' : 'Chưa có nội dung.') + '</p>') + '</section></div>';
+}
+
+function refreshCheckinData() {
+  var cin = $('#c-in'); if (!cin) return;
+  var total = S.regs.length, inList = S.regs.filter(function (r) { return r.checkedInAt; });
+  cin.textContent = inList.length;
+  $('#c-total').textContent = '/ ' + total + ' khách đã đăng ký';
+  $('#c-bar').style.width = (total ? Math.round(inList.length / total * 100) : 0) + '%';
+  inList.sort(function (a, b) { return String(b.checkedInAt).localeCompare(String(a.checkedInAt)); });
+  var feed = $('#feed');
+  if (!total) { feed.innerHTML = '<li class="empty">Chưa có khách mời đăng ký. Gửi link trang này để khách tự đăng ký, hoặc đăng ký hộ trong mục Quản trị.</li>'; return; }
+  if (!inList.length) { feed.innerHTML = '<li class="empty">Chưa có ai check-in. Người đến đầu tiên sẽ hiện ở đây.</li>'; return; }
+  feed.innerHTML = inList.slice(0, 8).map(function (r) {
+    return '<li>' + avatarHtml(r) + '<div class="who"><b>' + h(r.name) + '</b><span>' + h([r.position, r.org].filter(Boolean).join(' · ')) + '</span></div><span class="pill ok">' + fmtTime(r.checkedInAt) + '</span></li>';
+  }).join('');
+}
+
+function onCheckinPhoto(file) {
+  if (S.ci.img) URL.revokeObjectURL(S.ci.img);
+  S.ci = { s: 'busy', msg: 'Đang nhận diện…', img: null, fails: S.ci.fails };
+  render();
+  var canvas;
+  fileToCanvas(file).then(function (r) {
+    S.ci.img = r.url; canvas = r.canvas; render();
+    return describe(canvas);
+  }).then(function (res) {
+    var m = bestMatch(res.descriptor, S.regs, Number(S.secret.threshold) || SECRET_DEFAULTS.threshold);
+    if (!m.reg) {
+      S.ci.s = 'fail'; S.ci.fails++; S.ci.msg = 'Chưa nhận diện được. Chụp lại, nhìn thẳng vào camera.';
+      render(); return;
+    }
+    var r = m.reg, now = new Date().toISOString(), first = !r.checkedInAt;
+    if (!isEventDay()) {
+      S.ci.s = 'ok'; S.ci.fails = 0;
+      S.ci.msg = 'Thử thành công: ' + r.name + ' (khớp ' + score(m.distance) + '%). Không ghi check-in.';
+      render(); return;
+    }
+    S.ci.s = 'ok'; S.ci.msg = 'Xin chào ' + r.name + '!'; S.ci.fails = 0; render();
+    var photo = toJpeg(canvas, 520, 0.75);
+    var ciRef = S.db.collection('checkins').doc();
+    ciRef.set({ regId: r.id, at: now, photo: photo, distance: Math.round(m.distance * 1000) / 1000, method: 'face' })
+      .then(function () {
+        var patch = { lastSeenAt: now, scans: (r.scans || 0) + 1, lastCheckinId: ciRef.id };
+        if (first) { patch.checkedInAt = now; patch.checkedInDay = vnDay(now); patch.method = 'face'; patch.distance = Math.round(m.distance * 1000) / 1000; patch.review = null; }
+        return S.db.doc('regs/' + r.id).update(patch);
+      }).catch(writeFailed);
+    setTimeout(function () { startSession(r.id, first); }, 900);
+  }).catch(function (e) {
+    S.ci.s = 'fail'; S.ci.msg = e && e.message ? e.message : 'Có lỗi khi nhận diện. Thử lại.';
+    if (e && e.code !== 'NO_FACE' && e.code !== 'TOO_FAR') S.ci.fails++;
+    render();
+  });
+}
+
+function startSession(id, first) {
+  if (S.ci.img) URL.revokeObjectURL(S.ci.img);
+  S.ci = { s: 'idle', msg: '', img: null, fails: 0 };
+  S.session = { id: id, first: first };
+  lastTouch = Date.now();
+  S.docKey = DOCS[0] ? DOCS[0].key : null;
+  closeDetail();
+  go('tai-lieu');
+}
+function endSession() { S.session = null; go('checkin'); }
+
+/* ================= Tài liệu ================= */
+function viewDocs() {
+  var own = !S.isAdmin && guestUnlocked();
+  if (!S.session && !S.admin && !own) {
+    var msg = S.mine ? 'Quý khách đã đăng ký. Tài liệu sẽ mở ngay sau khi check-in bằng khuôn mặt tại cổng trường.' : 'Tài liệu hội thảo dành cho khách mời đã check-in bằng khuôn mặt tại cổng trường.';
+    return '<section class="panel locked"><div class="eyebrow">Tài liệu hội thảo</div><h2>Check-in để mở tài liệu</h2><p class="muted" style="margin:0">' + msg + '</p>' +
+      (S.isAdmin ? '<a class="btn primary" href="#checkin">Đến màn check-in</a>' : (S.mine ? '' : '<a class="btn primary" href="#dang-ky">Đăng ký khuôn mặt</a>')) + '</section>';
+  }
+  var r = S.session ? regById(S.session.id) : (own ? S.mine : null);
+  if (!DOCS.length) {
+    if (S.isAdmin || guestUnlocked()) watchDocs();
+    var st = S.docsState;
+    return '<section class="panel locked"><div class="eyebrow">Tài liệu hội thảo</div><h2>' + (st === 'locked' ? 'Chưa mở được tài liệu' : st === 'empty' ? 'Chưa có tài liệu' : 'Đang tải tài liệu…') + '</h2>' +
+      (st === 'locked' ? '<p class="muted" style="margin:0">Tài liệu chỉ mở cho khách đã check-in đúng ngày hội thảo ' + fmtDay(eventDay()) + '.</p>'
+        : st === 'empty' ? '<p class="muted" style="margin:0">' + (S.isAdmin ? 'Vào Quản trị → Tài liệu để nhập nội dung.' : 'Ban tổ chức chưa đăng tài liệu.') + '</p>'
+        : '<span class="spinner" aria-hidden="true"></span>') + '</section>';
+  }
+  var doc = DOCS.filter(function (d) { return d.key === S.docKey; })[0] || DOCS[0];
+  var top;
+  if (r) {
+    top = '<section class="session">' + avatarHtml(r) +
+      '<div class="who"><small>' + (S.session ? (S.session.first ? 'Check-in thành công' : 'Chào mừng quay lại') : 'Đã check-in') + '</small><h2>' + h(r.name) + '</h2>' +
+      '<p>' + h([r.position, r.org].filter(Boolean).join(' · ')) + (r.checkedInAt ? ' · check-in lúc ' + fmtTime(r.checkedInAt) : '') + '</p></div>' +
+      (S.session ? '<span class="timer" id="timer"></span><button class="btn primary" id="done" type="button">Hoàn tất</button>' : '') + '</section>';
+  } else {
+    top = '<div class="notice"><strong>Đang xem với quyền quản trị.</strong> Khách mời chỉ thấy tài liệu sau khi check-in.</div>';
+  }
+  var nav = '<nav class="doc-nav" aria-label="Danh mục tài liệu">' + DOCS.map(function (d) {
+    return '<button type="button" data-doc="' + d.key + '" aria-current="' + (d.key === doc.key) + '">' + h(d.title) + (d.note ? '<small>' + h(d.note) + '</small>' : '') + '</button>';
+  }).join('') + '</nav>';
+  return top + '<div class="docs">' + nav + '<article class="panel doc" id="doc">' + docBody(doc) + qrBlock() + '</article></div>';
+}
+
+function docBody(d) {
+  var out = '<h2>' + h(d.title) + '</h2>' + (d.lead ? '<p class="lead">' + h(d.lead) + '</p>' : '');
+  if (d.type === 'timeline') {
+    out += '<ol class="tl">' + d.items.map(function (it) {
+      return '<li><time>' + h(it[0]) + '</time><span class="rail" aria-hidden="true"></span><div class="what"><b>' + h(it[1]) + '</b>' + (it[2] ? '<span>' + h(it[2]) + '</span>' : '') + '</div></li>';
+    }).join('') + '</ol>';
+  } else if (d.type === 'checklist') {
+    out += '<div id="ck-progress"></div><div id="ck-list">' + d.groups.map(function (gr) {
+      return '<div class="ck-group"><h3>' + h(gr[0]) + '</h3>' + gr[1].map(function (it) {
+        return '<label class="ck"><input type="checkbox" id="ck-' + it[0] + '" data-ck="' + it[0] + '"><span class="t"><b>' + h(it[1]) + '</b><span>' + h(it[2]) + '</span></span></label>';
+      }).join('') + '</div>';
+    }).join('') + '</div>';
+  } else {
+    d.sections.forEach(function (s) {
+      out += '<h3>' + h(s.h) + '</h3>';
+      (s.p || []).forEach(function (p) { out += '<p>' + h(p) + '</p>'; });
+      if (s.ul) out += '<ul>' + s.ul.map(function (x) { return '<li>' + h(x) + '</li>'; }).join('') + '</ul>';
+      if (s.kv) out += '<dl class="kv">' + s.kv.map(function (r) { return '<div><dt>' + h(r[0]) + '</dt><dd>' + h(r[1]) + '</dd></div>'; }).join('') + '</dl>';
+    });
+    if (d.links && d.links.length) out += '<div class="chips" style="margin-top:16px">' + d.links.map(function (l) { return '<a class="btn" href="' + h(l[1]) + '" target="_blank" rel="noopener">' + h(l[0]) + '</a>'; }).join('') + '</div>';
+  }
+  return out;
+}
+function qrBlock() {
+  if (!S.docsLink || !S.session) return '';
+  return '<div class="qr"><div class="qr-box" id="qr"></div><div style="flex:1 1 200px;min-width:0"><b>Mang tài liệu theo bạn</b><p class="muted" style="margin:4px 0 0">Quét mã bằng camera điện thoại để mở bộ tài liệu đầy đủ trên máy của quý khách.</p></div></div>';
+}
+function drawQr() {
+  var box = $('#qr'); if (!box || !window.QRCode) return;
+  box.innerHTML = '';
+  try { new window.QRCode(box, { text: S.docsLink, width: 150, height: 150, colorDark: '#12305A', colorLight: '#FFFFFF', correctLevel: window.QRCode.CorrectLevel.M }); } catch (e) { box.parentNode.hidden = true; }
+}
+function refreshChecklist() {
+  var all = $$('[data-ck]'); if (!all.length) return;
+  var n = 0;
+  all.forEach(function (el) { el.checked = !!S.checklist[el.dataset.ck]; if (el.checked) n++; el.disabled = !S.isAdmin; });
+  var pct = Math.round(n / all.length * 100);
+  $('#ck-progress').innerHTML = '<div class="counter"><strong style="font-size:28px">' + n + '/' + all.length + '</strong><span class="muted">việc đã xong (' + pct + '%)</span></div><div class="bar"><i style="width:' + pct + '%"></i></div>';
+}
+var ckQueue = Promise.resolve();
+function toggleCheck(id, on) {
+  S.checklist[id] = on; refreshChecklist();
+  if (!S.db) return;
+  var snap = Object.assign({}, S.checklist);
+  ckQueue = ckQueue.then(function () { return S.db.doc('content/checklist').set({ done: snap }); }).catch(writeFailed);
+}
+
+/* ================= Quản trị ================= */
+function viewAdmin() {
+  if (!S.admin) {
+    return '<form class="panel pin" id="pin-form"><div class="eyebrow">Ban tổ chức</div><h2>Nhập mã PIN quản trị</h2>' +
+      '<input class="input" id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="Mã PIN">' +
+      '<p class="hint" id="pin-err">Mã mặc định là 1234, đổi trong mục Cài đặt.</p>' +
+      '<button class="btn dark" type="submit">Mở quản trị</button></form>';
+  }
+  var t = S.adminTab;
+  var tabs = [['list', 'Khách mời'], ['desk', S.form && S.form.mode === 'desk' && S.form.id ? 'Cập nhật đăng ký' : 'Đăng ký hộ'], ['docs', 'Tài liệu'], ['settings', 'Cài đặt']];
+  return '<div class="admin-head"><h1>Quản trị</h1><button class="btn sm" type="button" id="preview-docs">Xem tài liệu</button><button class="btn sm" type="button" id="lock">Khoá</button></div>' +
+    '<div class="subtabs">' + tabs.map(function (x) { return '<button class="chip" type="button" data-atab="' + x[0] + '" aria-pressed="' + (t === x[0]) + '">' + h(x[1]) + '</button>'; }).join('') + '</div>' +
+    (t === 'desk' ? viewDesk() : t === 'settings' ? viewSettings() : t === 'docs' ? viewDocsEditor() : viewList());
+}
+
+function reviewState(r) {
+  if (!r.checkedInAt) return 'none';
+  if (r.review === 'ok') return 'ok';
+  if (r.review === 'bad') return 'bad';
+  return 'pending';
+}
+function viewList() {
+  var f = S.filter;
+  var stat = function (key, label, cls) { return '<button class="stat ' + cls + '" type="button" data-filter="' + key + '" aria-pressed="' + (f === key) + '"><strong id="s-' + key + '">0</strong><span>' + label + '</span></button>'; };
+  return '<div class="stats">' + stat('all', 'Đã đăng ký', '') + stat('in', 'Đã đến', 'ok') + stat('out', 'Chưa đến', 'wait') + stat('review', 'Cần đối chiếu ảnh', 'warn') + '</div>' +
+    '<section class="panel"><div class="toolbar"><input class="input" id="q" type="search" placeholder="Tìm theo tên, chức vụ, đơn vị" value="' + h(S.query) + '" aria-label="Tìm khách mời">' +
+    '<button class="btn" type="button" id="export">Tải danh sách (CSV)</button></div>' +
+    '<div id="rows"></div></section>';
+}
+function refreshList() {
+  var rows = $('#rows');
+  var counts = { all: S.regs.length, in: 0, out: 0, review: 0 };
+  S.regs.forEach(function (r) { if (r.checkedInAt) counts.in++; else counts.out++; if (reviewState(r) === 'pending' || reviewState(r) === 'bad') counts.review++; });
+  Object.keys(counts).forEach(function (k) { var el = $('#s-' + k); if (el) el.textContent = counts[k]; });
+  if (!rows) return;
+  var q = norm(S.query);
+  var list = S.regs.filter(function (r) {
+    if (S.filter === 'in') return r.checkedInAt;
+    if (S.filter === 'out') return !r.checkedInAt;
+    if (S.filter === 'review') { var st = reviewState(r); return st === 'pending' || st === 'bad'; }
+    return true;
+  }).filter(function (r) { return !q || norm([r.name, r.position, r.org].join(' ')).indexOf(q) >= 0; });
+  list.sort(function (a, b) {
+    if (S.filter === 'in' || S.filter === 'review') return String(b.checkedInAt).localeCompare(String(a.checkedInAt));
+    return String(a.name).localeCompare(String(b.name), 'vi');
+  });
+  if (!S.regs.length) { rows.innerHTML = '<div class="empty">Chưa có khách mời đăng ký. Gửi link trang này cho khách mời để họ tự đăng ký, hoặc chọn <b>Đăng ký hộ</b>.</div>'; return; }
+  if (!list.length) { rows.innerHTML = '<div class="empty">Không có khách mời phù hợp.</div>'; return; }
+  rows.innerHTML = list.map(function (r) {
+    var st = reviewState(r);
+    var tags = r.checkedInAt ? '<span class="pill ok">Đã đến ' + fmtTime(r.checkedInAt) + '</span>' : '<span class="pill wait">Chưa đến</span>';
+    if (st === 'pending') tags += '<span class="pill warn">' + (r.method === 'manual' ? 'Thủ công · cần xem' : 'Cần đối chiếu') + '</span>';
+    if (st === 'ok') tags += '<span class="pill ok">Đã xác minh</span>';
+    if (st === 'bad') tags += '<span class="pill bad">Không khớp</span>';
+    if (r.checkedInAt && r.distance != null) tags += '<span class="pill wait">Khớp ' + score(r.distance) + '%</span>';
+    return '<button class="row" type="button" data-open="' + h(r.id) + '">' + avatarHtml(r) + '<span class="who"><b>' + h(r.name) + '</b><span>' + h([r.position, r.org].filter(Boolean).join(' · ')) + (r.source === 'desk' ? ' · đăng ký tại bàn' : '') + '</span></span><span class="tags">' + tags + '</span></button>';
+  }).join('');
+}
+
+/* --- Đối chiếu ảnh của một khách --- */
+function openDetail(id) {
+  S.detail = { id: id, photos: null, checkins: null };
+  renderDetail();
+  S.db.doc('regphotos/' + id).get().then(function (d) {
+    if (!S.detail || S.detail.id !== id) return;
+    S.detail.photos = d.exists ? (d.data().photos || []) : []; renderDetail();
+  }).catch(function () { if (S.detail) { S.detail.photos = []; renderDetail(); } });
+  S.db.collection('checkins').where('regId', '==', id).get().then(function (snap) {
+    if (!S.detail || S.detail.id !== id) return;
+    S.detail.checkins = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }).sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); });
+    renderDetail();
+  }).catch(function () { if (S.detail) { S.detail.checkins = []; renderDetail(); } });
+}
+function closeDetail() { S.detail = null; $('#overlay').innerHTML = ''; }
+function renderDetail() {
+  var dt = S.detail; if (!dt) return;
+  var r = regById(dt.id); if (!r) { closeDetail(); return; }
+  var st = reviewState(r);
+  var regShots = dt.photos === null ? '<p class="muted">Đang tải ảnh…</p>' : (dt.photos.filter(isDataImg).length ? '<div class="shots">' + dt.photos.filter(isDataImg).map(function (p, i) { return '<img src="' + p + '" alt="Ảnh đăng ký ' + (i + 1) + ': ' + PHOTO_TIPS[i] + '">'; }).join('') + '</div>' : '<p class="muted">Không có ảnh đăng ký.</p>');
+  var cis = dt.checkins === null ? '<p class="muted">Đang tải…</p>' : (!dt.checkins.length ? '<p class="muted">' + (r.checkedInAt ? 'Không có ảnh check-in (check-in thủ công hoặc dữ liệu cũ).' : 'Khách chưa check-in.') + '</p>' :
+    '<div class="ci-list">' + dt.checkins.map(function (c) {
+      return '<div class="ci-shot">' + (isDataImg(c.photo) ? '<img src="' + c.photo + '" alt="Ảnh check-in lúc ' + fmtTime(c.at) + '">' : '<div class="noimg">Không có ảnh</div>') +
+        '<dl><dt>Thời điểm</dt><dd>' + fmtDateTime(c.at) + '</dd><dt>Hình thức</dt><dd>' + (c.method === 'manual' ? 'Thủ công tại bàn' : 'Nhận diện khuôn mặt') + '</dd>' +
+        (c.distance != null ? '<dt>Độ khớp</dt><dd>' + score(c.distance) + '%</dd>' : '') + '</dl></div>';
+    }).join('') + '</div>');
+  var verdict = r.checkedInAt
+    ? '<span class="pill ' + (st === 'ok' ? 'ok' : st === 'bad' ? 'bad' : 'warn') + '">' + (st === 'ok' ? 'Đã xác minh đúng người' : st === 'bad' ? 'Đánh dấu không khớp' : 'Chưa đối chiếu') + '</span><span class="spacer"></span>' +
+      '<button class="btn good" type="button" data-d="ok">Đúng người</button><button class="btn danger" type="button" data-d="bad">Không khớp</button><button class="btn" type="button" data-d="undo">Huỷ check-in</button>'
+    : '<span class="pill wait">Chưa đến</span><span class="spacer"></span><button class="btn dark" type="button" data-d="manual">Check-in thủ công</button>';
+  var html = '<div class="modal" id="detail" role="dialog" aria-modal="true" aria-labelledby="dt-name"><div class="panel sheet">' +
+    '<div class="sheet-head">' + avatarHtml(r) + '<div class="who"><h2 id="dt-name">' + h(r.name) + '</h2><div class="muted">' + h([r.position, r.org].filter(Boolean).join(' · ')) + '</div>' +
+    '<div class="hint">Đăng ký ' + (r.source === 'desk' ? 'tại bàn' : 'trực tuyến') + (r.createdAt ? ' lúc ' + fmtDateTime(r.createdAt) : '') + '</div></div><button class="btn" type="button" data-d="close">Đóng</button></div>' +
+    '<div class="compare"><div><h3>Ảnh đăng ký</h3>' + regShots + '</div><div><h3>Ảnh check-in tại cổng</h3>' + cis + '</div></div>' +
+    '<div class="verdict">' + verdict + '</div>' +
+    '<div class="chips"><button class="btn sm" type="button" data-d="edit">Cập nhật thông tin hoặc ảnh</button><button class="btn sm danger" type="button" data-d="del">Xoá đăng ký</button></div>' +
+    '</div></div>';
+  var ov = $('#overlay');
+  var existing = $('#detail');
+  var scroll = existing ? existing.querySelector('.sheet').scrollTop : 0;
+  if (existing) existing.remove();
+  ov.insertAdjacentHTML('afterbegin', html);
+  var box = $('#detail');
+  box.querySelector('.sheet').scrollTop = scroll;
+  box.onclick = function (e) {
+    if (e.target === box) { closeDetail(); return; }
+    var b = e.target.closest('[data-d]'); if (b) detailAction(b.dataset.d, r);
+  };
+}
+function detailAction(act, r) {
+  var ref = S.db.doc('regs/' + r.id);
+  if (act === 'close') closeDetail();
+  else if (act === 'ok' || act === 'bad') ref.update({ review: act, reviewedAt: new Date().toISOString() }).then(function () { toast(act === 'ok' ? 'Đã xác minh ' + r.name : 'Đã đánh dấu không khớp'); }).catch(writeFailed);
+  else if (act === 'manual') {
+    if (!isEventDay()) { toast('Chỉ check-in được trong ngày hội thảo ' + fmtDay(eventDay()) + '.'); return; }
+    var now = new Date().toISOString(), ci = S.db.collection('checkins').doc();
+    ci.set({ regId: r.id, at: now, photo: null, distance: null, method: 'manual' })
+      .then(function () { return ref.update({ checkedInAt: now, checkedInDay: vnDay(now), method: 'manual', distance: null, review: null, lastCheckinId: ci.id }); })
+      .then(function () { toast('Đã check-in thủ công cho ' + r.name); startSession(r.id, true); }).catch(writeFailed);
+  } else if (act === 'undo') {
+    ask('Huỷ check-in?', 'Đặt ' + r.name + ' về trạng thái chưa đến và xoá ảnh check-in của lượt này.', 'Huỷ check-in', function () {
+      var ids = (S.detail && S.detail.checkins || []).map(function (c) { return c.id; });
+      ids.reduce(function (p, id) { return p.then(function () { return S.db.doc('checkins/' + id).delete(); }); }, Promise.resolve())
+        .then(function () { return ref.update({ checkedInAt: null, checkedInDay: null, method: null, distance: null, review: null, scans: 0 }); })
+        .then(function () { toast('Đã huỷ check-in'); openDetail(r.id); }).catch(writeFailed);
+    });
+  } else if (act === 'del') {
+    ask('Xoá đăng ký?', 'Xoá ' + r.name + ' cùng ảnh đăng ký và ảnh check-in. Không thể hoàn tác.', 'Xoá', function () {
+      var ids = (S.detail && S.detail.checkins || []).map(function (c) { return c.id; });
+      ids.reduce(function (p, id) { return p.then(function () { return S.db.doc('checkins/' + id).delete(); }); }, Promise.resolve())
+        .then(function () { return S.db.doc('regphotos/' + r.id).delete(); })
+        .then(function () { return ref.delete(); })
+        .then(function () { closeDetail(); toast('Đã xoá ' + r.name); }).catch(writeFailed);
+    }, true);
+  } else if (act === 'edit') {
+    closeDetail(); S.form = newForm('desk', r); S.adminTab = 'desk'; render();
+  }
+}
+
+/* --- Trình sửa tài liệu (Quản trị → Tài liệu) --- */
+var DOC_TYPES = { timeline: 'Lịch trình theo giờ', sections: 'Văn bản', checklist: 'Danh sách việc' };
+var DOC_HELP = {
+  timeline: 'Mỗi dòng một hoạt động: <b>giờ | tên hoạt động | ghi chú</b>. Dòng bắt đầu bằng <b>&gt;</b> là mô tả ngắn.',
+  sections: '<b># </b>tiêu đề mục · <b>- </b>gạch đầu dòng · <b>= Nhãn | Giá trị</b> dòng bảng · <b>@ Tên nút | https://…</b> link · <b>&gt;</b> mô tả ngắn · dòng thường là đoạn văn.',
+  checklist: '<b># </b>tên nhóm · <b>- việc cần làm | người phụ trách</b> · <b>&gt;</b> mô tả ngắn.'
+};
+function docToText(d) {
+  var L = [];
+  if (d.lead) L.push('> ' + d.lead);
+  if (d.type === 'timeline') (d.items || []).forEach(function (it) { L.push(it[0] + ' | ' + it[1] + (it[2] ? ' | ' + it[2] : '')); });
+  else if (d.type === 'checklist') (d.groups || []).forEach(function (g) { L.push('# ' + g[0]); g[1].forEach(function (it) { L.push('- ' + it[1] + (it[2] ? ' | ' + it[2] : '')); }); });
+  else {
+    (d.sections || []).forEach(function (s) {
+      L.push('# ' + s.h);
+      (s.p || []).forEach(function (x) { L.push(x); });
+      (s.ul || []).forEach(function (x) { L.push('- ' + x); });
+      (s.kv || []).forEach(function (r) { L.push('= ' + r[0] + ' | ' + r[1]); });
+    });
+    (d.links || []).forEach(function (l) { L.push('@ ' + l[0] + ' | ' + l[1]); });
+  }
+  return L.join('\n');
+}
+function textToDoc(type, text, prev) {
+  var d = { type: type }, lead = [];
+  var lines = String(text || '').split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+  var split = function (s) { return s.split('|').map(function (x) { return x.trim(); }); };
+  var isLead = function (l) { return l.charAt(0) === '>'; };
+  if (type === 'timeline') {
+    d.items = [];
+    lines.forEach(function (l) {
+      if (isLead(l)) { lead.push(l.slice(1).trim()); return; }
+      var p = split(l); d.items.push([p[0] || '', p[1] || '', p.slice(2).join(' | ')]);
+    });
+    d.note = d.items.length + ' mục';
+  } else if (type === 'checklist') {
+    d.groups = []; var g = null, old = {}, used = {};
+    ((prev && prev.groups) || []).forEach(function (gr) { gr[1].forEach(function (it) { old[it[1]] = it[0]; }); });
+    lines.forEach(function (l) {
+      if (isLead(l)) { lead.push(l.slice(1).trim()); return; }
+      if (l.charAt(0) === '#') { g = [l.replace(/^#+\s*/, ''), []]; d.groups.push(g); return; }
+      if (!g) { g = ['Việc cần làm', []]; d.groups.push(g); }
+      var p = split(l.replace(/^[-*•]\s*/, ''));
+      var id = old[p[0]] && !used[old[p[0]]] ? old[p[0]] : 'k' + rid();
+      used[id] = 1; g[1].push([id, p[0], p.slice(1).join(' | ')]);
+    });
+  } else {
+    d.sections = []; d.links = []; var s = null;
+    var sec = function () { if (!s) { s = { h: 'Nội dung' }; d.sections.push(s); } return s; };
+    lines.forEach(function (l) {
+      var c = l.charAt(0), x, p;
+      if (c === '>') lead.push(l.slice(1).trim());
+      else if (c === '#') { s = { h: l.replace(/^#+\s*/, '') }; d.sections.push(s); }
+      else if (/^[-*•]\s/.test(l)) { x = sec(); (x.ul = x.ul || []).push(l.replace(/^[-*•]\s*/, '')); }
+      else if (c === '=') { x = sec(); p = split(l.slice(1)); (x.kv = x.kv || []).push([p[0] || '', p.slice(1).join(' | ')]); }
+      else if (c === '@') { p = split(l.slice(1)); if (/^https?:\/\//i.test(p[1] || '')) d.links.push([p[0] || 'Mở tài liệu', p[1]]); }
+      else { x = sec(); (x.p = x.p || []).push(l); }
+    });
+  }
+  if (lead.length) d.lead = lead.join(' ');
+  return d;
+}
+function viewDocsEditor() {
+  if (S.docsState === 'loading' || S.docsState === 'idle') { watchDocs(); return '<section class="panel"><p class="muted">Đang tải tài liệu…</p></section>'; }
+  if (!S.docEdit) S.docEdit = { link: S.docsLink || '', items: DOCS.map(function (d) { return { key: d.key, title: d.title, type: DOC_TYPES[d.type] ? d.type : 'sections', text: docToText(d), prev: d }; }) };
+  var e = S.docEdit, n = e.items.length;
+  return '<div class="form">' +
+    '<section class="panel form"><div><div class="eyebrow">Tài liệu hội thảo</div>' +
+    '<p class="hint" style="margin-top:6px">Lưu trên Firebase, không nằm trong mã nguồn GitHub. Chỉ Ban tổ chức và khách đã check-in đúng ngày ' + fmtDay(eventDay()) + ' đọc được. Mỗi mục là một tab trên màn Tài liệu.</p></div>' +
+    '<div class="field"><label for="d-link">Link tài liệu đầy đủ (tuỳ chọn)</label><input class="input" id="d-link" type="url" value="' + h(e.link) + '" placeholder="https://drive.google.com/…"><span class="hint">Nếu có, sau khi check-in tại cổng trang hiện mã QR để khách mở trên điện thoại.</span></div></section>' +
+    e.items.map(function (it, i) {
+      return '<section class="panel form"><div class="doc-edit-head"><input class="input" id="d-title-' + i + '" value="' + h(it.title) + '" aria-label="Tên tab tài liệu ' + (i + 1) + '"><span class="pill wait">' + DOC_TYPES[it.type] + '</span>' +
+        '<span class="chips"><button class="btn sm" type="button" data-dmove="' + i + '" data-dir="-1"' + (i === 0 ? ' disabled' : '') + ' aria-label="Đưa lên">↑</button>' +
+        '<button class="btn sm" type="button" data-dmove="' + i + '" data-dir="1"' + (i === n - 1 ? ' disabled' : '') + ' aria-label="Đưa xuống">↓</button>' +
+        '<button class="btn sm danger" type="button" data-ddel="' + i + '">Xoá</button></span></div>' +
+        '<textarea class="input doc-text" id="d-text-' + i + '" rows="' + Math.min(18, Math.max(6, it.text.split('\n').length + 1)) + '" spellcheck="false">' + h(it.text) + '</textarea>' +
+        '<p class="hint">' + DOC_HELP[it.type] + '</p></section>';
+    }).join('') +
+    '<div class="chips"><button class="btn" type="button" data-dadd="sections">+ Thêm văn bản</button><button class="btn" type="button" data-dadd="checklist">+ Thêm danh sách việc</button><button class="btn" type="button" data-dadd="timeline">+ Thêm lịch trình</button></div>' +
+    '<div class="chips"><button class="btn primary big" type="button" id="d-save" style="flex:1 1 240px">Lưu tài liệu</button><button class="btn" type="button" id="d-discard">Bỏ thay đổi</button><button class="btn" type="button" id="d-preview">Xem như khách</button></div>' +
+    '</div>';
+}
+function syncDocEdit() {
+  var e = S.docEdit, l = $('#d-link'); if (!e || !l) return;
+  e.link = l.value;
+  e.items.forEach(function (it, i) { var t = $('#d-title-' + i), x = $('#d-text-' + i); if (t) it.title = t.value; if (x) it.text = x.value; });
+}
+function saveDocs() {
+  syncDocEdit();
+  var e = S.docEdit; if (!e) return;
+  var link = e.link.trim();
+  if (link && !/^https:\/\//i.test(link)) { toast('Link tài liệu phải bắt đầu bằng https://'); return; }
+  var docs = e.items.map(function (it) { return Object.assign(textToDoc(it.type, it.text, it.prev), { key: it.key, title: it.title.trim() || 'Tài liệu' }); });
+  if (JSON.stringify(docs).length > 900000) { toast('Tài liệu quá dài. Hãy rút gọn hoặc đưa bớt lên Google Drive rồi dán link.'); return; }
+  S.db.doc('content/docs').set({ docs: docs, docsLink: link, updatedAt: new Date().toISOString() })
+    .then(function () { S.docEdit = null; toast('Đã lưu tài liệu'); render(); }).catch(writeFailed);
+}
+
+function viewDesk() {
+  if (!S.form || S.form.mode !== 'desk') S.form = newForm('desk');
+  return '<div class="two even"><section class="panel"><div class="eyebrow">Tại bàn lễ tân</div><h2 style="font-size:20px;font-weight:800;margin-top:6px">Đăng ký hộ khách chưa đăng ký trước</h2>' +
+    '<p class="lead-p">Dùng khi khách không đăng ký trực tuyến được. Chụp 3 ảnh của khách ngay tại bàn, lưu xong khách có thể check-in ở cổng.</p>' +
+    '<p class="hint" style="margin-top:12px">Trang sẽ cảnh báo nếu khuôn mặt trùng với người đã đăng ký.</p></section>' + formHtml() + '</div>';
+}
+
+/* --- Cài đặt --- */
+function viewSettings() {
+  var c = S.cfg, s = S.secret;
+  return '<form class="panel form" id="set-form"><div class="settings">' +
+    '<div class="field"><label for="s-name">Tên sự kiện</label><input class="input" id="s-name" value="' + h(c.eventName) + '"></div>' +
+    '<div class="field"><label for="s-venue">Địa điểm</label><input class="input" id="s-venue" value="' + h(c.venue) + '"></div>' +
+    '<div class="field"><label for="s-date">Ngày diễn ra hội thảo (giờ Việt Nam)</label><input class="input" id="s-date" type="date" value="' + h(c.eventDate) + '"><span class="hint">Chỉ check-in trong ngày này mới được ghi nhận và mở tài liệu cho khách. Ngày khác, máy ở cổng chạy chế độ thử.</span></div>' +
+    '<div class="field"><label for="s-note">Thông báo trên trang đăng ký</label><input class="input" id="s-note" value="' + h(c.regNote) + '" placeholder="VD: Hạn đăng ký: 17:00 ngày 10/12"></div>' +
+    '<div class="field"><label for="s-thr">Ngưỡng nhận diện</label><input class="input" id="s-thr" inputmode="decimal" value="' + h(s.threshold) + '"><span class="hint">0.30 đến 0.70, mặc định 0.50. Giảm nếu nhận nhầm người, tăng nếu khách khó được nhận ra.</span></div>' +
+    '<div class="field"><label for="s-auto">Tự quay về check-in sau (giây)</label><input class="input" id="s-auto" inputmode="numeric" value="' + h(c.autoReturn) + '"><span class="hint">0 để tắt.</span></div>' +
+    '<div class="field"><label for="s-pin">Mã PIN quản trị</label><input class="input" id="s-pin" inputmode="numeric" value="' + h(s.pin) + '"><span class="hint">4 đến 8 chữ số. Chỉ Ban tổ chức đọc được.</span></div>' +
+    '<label class="check" style="align-self:end"><input type="checkbox" id="s-open"' + (c.regOpen ? ' checked' : '') + '><span>Mở đăng ký trực tuyến cho khách mời</span></label>' +
+    '</div><div class="chips"><button class="btn dark" type="submit">Lưu cài đặt</button></div></form>' +
+    '<section class="panel form" style="margin-top:16px"><div class="eyebrow">Dữ liệu</div>' +
+    '<div class="chips"><button class="btn danger" type="button" id="reset">Đặt lại toàn bộ check-in</button></div>' +
+    '<p class="hint">Đặt lại xoá trạng thái và ảnh check-in, giữ nguyên đăng ký và ảnh đăng ký.</p></section>';
+}
+function saveSettings() {
+  var thr = parseFloat(String($('#s-thr').value).replace(',', '.'));
+  var auto = parseInt($('#s-auto').value, 10), pin = $('#s-pin').value.trim();
+  if (!(thr >= 0.3 && thr <= 0.7)) { toast('Ngưỡng nhận diện phải từ 0.30 đến 0.70.'); return; }
+  if (!/^\d{4,8}$/.test(pin)) { toast('Mã PIN gồm 4 đến 8 chữ số.'); return; }
+  var day = $('#s-date').value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) { toast('Chọn ngày diễn ra hội thảo.'); return; }
+  var pub = { eventName: $('#s-name').value.trim() || PUBLIC_DEFAULTS.eventName, venue: $('#s-venue').value.trim(), eventDate: day, regNote: $('#s-note').value.trim(),
+    autoReturn: isFinite(auto) && auto >= 0 ? auto : PUBLIC_DEFAULTS.autoReturn, regOpen: $('#s-open').checked };
+  S.db.doc('config/settings').set(pub)
+    .then(function () { return S.db.doc('secret/settings').set({ pin: pin, threshold: thr }); })
+    .then(function () { toast('Đã lưu cài đặt'); }).catch(writeFailed);
+}
+function csv() {
+  var esc = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+  var rows = [['Họ và tên', 'Chức vụ', 'Trường / Đơn vị', 'Đăng ký', 'Trạng thái', 'Giờ check-in', 'Hình thức', 'Độ khớp', 'Đối chiếu ảnh']];
+  S.regs.slice().sort(function (a, b) { return String(a.name).localeCompare(String(b.name), 'vi'); }).forEach(function (r) {
+    var st = reviewState(r);
+    rows.push([r.name, r.position, r.org, r.source === 'desk' ? 'Tại bàn' : 'Trực tuyến', r.checkedInAt ? 'Đã đến' : 'Chưa đến', r.checkedInAt ? fmtDateTime(r.checkedInAt) : '',
+      r.checkedInAt ? (r.method === 'manual' ? 'Thủ công' : 'Khuôn mặt') : '', r.checkedInAt && r.distance != null ? score(r.distance) + '%' : '',
+      st === 'ok' ? 'Đúng người' : st === 'bad' ? 'Không khớp' : st === 'pending' ? 'Chưa đối chiếu' : '']);
+  });
+  return '﻿' + rows.map(function (r) { return r.map(esc).join(','); }).join('\r\n');
+}
+function exportCsv() {
+  try {
+    var blob = new Blob([csv()], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'danh-sach-check-in-' + vnDay() + '.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast('Đã tải danh sách');
+  } catch (err) { toast('Không tải được file lúc này.'); }
+}
+function resetAll() {
+  ask('Đặt lại toàn bộ check-in?', 'Mọi khách sẽ về trạng thái chưa đến và ảnh check-in bị xoá.', 'Đặt lại', function () {
+    S.db.collection('checkins').get().then(function (snap) {
+      return snap.docs.reduce(function (p, d) { return p.then(function () { return S.db.doc('checkins/' + d.id).delete(); }); }, Promise.resolve());
+    }).then(function () {
+      var list = S.regs.filter(function (r) { return r.checkedInAt; });
+      return list.reduce(function (p, r) { return p.then(function () { return S.db.doc('regs/' + r.id).update({ checkedInAt: null, checkedInDay: null, method: null, distance: null, review: null, scans: 0 }); }); }, Promise.resolve()).then(function () { return list.length; });
+    }).then(function (n) { toast('Đã đặt lại ' + n + ' lượt check-in'); }).catch(writeFailed);
+  }, true);
+}
+
+/* ================= Camera =================
+   Điện thoại, iPad: mở camera trước của máy qua ô chọn ảnh (capture="user").
+   Máy tính: mở webcam ngay trong trang, có khung xem trước và nút Chụp. */
+var cam = { stream: null, token: 0 };
+function stopCam() {
+  cam.token++;
+  if (cam.stream) { cam.stream.getTracks().forEach(function (t) { t.stop(); }); cam.stream = null; }
+  var m = $('#cam-modal'); if (m) m.remove();
+}
+function takePhoto(inputSel, onFile, title) {
+  var input = $(inputSel);
+  var touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  if (touch || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) { input.value = ''; input.click(); return; }
+  stopCam();
+  var my = cam.token;
+  $('#overlay').insertAdjacentHTML('beforeend',
+    '<div class="modal" id="cam-modal" role="dialog" aria-modal="true" aria-labelledby="cam-t"><div class="panel cam">' +
+    '<h3 id="cam-t">' + h(title || 'Chụp ảnh khuôn mặt') + '</h3>' +
+    '<div class="cam-view" id="cam-view"><div class="msg"><span class="spinner" aria-hidden="true"></span>Đang mở camera… Nếu trình duyệt hỏi, hãy chọn <b>Cho phép</b>.</div></div>' +
+    '<div class="acts"><button class="btn" type="button" data-c="file">Chọn ảnh có sẵn</button><button class="btn" type="button" data-c="cancel">Huỷ</button><button class="btn primary" type="button" data-c="shoot" disabled>Chụp</button></div>' +
+    '</div></div>');
+  var modal = $('#cam-modal'), view = $('#cam-view'), shoot = modal.querySelector('[data-c=shoot]');
+  modal.onclick = function (e) {
+    if (e.target === modal) { stopCam(); return; }
+    var b = e.target.closest('[data-c]'); if (!b) return;
+    if (b.dataset.c === 'cancel') stopCam();
+    else if (b.dataset.c === 'file') { stopCam(); input.value = ''; input.click(); }
+    else if (b.dataset.c === 'shoot') {
+      var v = view.querySelector('video'); if (!v || !v.videoWidth) return;
+      var c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight;
+      var ctx = c.getContext('2d'); ctx.translate(c.width, 0); ctx.scale(-1, 1); ctx.drawImage(v, 0, 0);
+      c.toBlob(function (blob) { stopCam(); if (blob) onFile(blob); else toast('Không chụp được ảnh. Thử lại.'); }, 'image/jpeg', 0.92);
+    }
+  };
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false })
+    .then(function (stream) {
+      if (my !== cam.token) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
+      cam.stream = stream;
+      view.innerHTML = '<video autoplay playsinline muted></video><div class="oval" aria-hidden="true"></div>';
+      var v = view.querySelector('video'); v.srcObject = stream;
+      v.onloadedmetadata = function () { v.play().catch(function () {}); shoot.disabled = false; shoot.focus(); };
+    })
+    .catch(function (e) {
+      if (my !== cam.token) return;
+      var denied = e && (e.name === 'NotAllowedError' || e.name === 'SecurityError');
+      var none = e && (e.name === 'NotFoundError' || e.name === 'OverconstrainedError');
+      view.innerHTML = '<div class="msg"><b>' + (none ? 'Không tìm thấy webcam trên máy này.' : 'Chưa mở được camera.') + '</b>' +
+        (denied ? 'Trình duyệt hoặc trang đang chặn quyền dùng camera. Bấm biểu tượng ổ khoá cạnh thanh địa chỉ, chọn Cho phép camera rồi thử lại. ' : '') +
+        'Trên điện thoại hoặc iPad, chạm vào ô ảnh sẽ mở thẳng camera trước. Trên máy tính, Thầy/Cô có thể chọn một ảnh chân dung có sẵn.</div>';
+    });
+}
+
+/* ================= Gắn sự kiện ================= */
+function bind() {
+  var el;
+  if ((el = $('#ci-shoot'))) el.onclick = function () { takePhoto('#cam-checkin', onCheckinPhoto, 'Chụp ảnh check-in'); };
+  if ((el = $('#done'))) el.onclick = endSession;
+  $$('[data-doc]').forEach(function (b) { b.onclick = function () { S.docKey = b.dataset.doc; render(); var d = $('#doc'); if (d && window.innerWidth < 900) d.scrollIntoView({ block: 'start' }); }; });
+  $$('[data-ck]').forEach(function (c) { c.onchange = function () { toggleCheck(c.dataset.ck, c.checked); }; });
+  if ((el = $('#edit-mine'))) el.onclick = function () { S.editingMine = true; S.form = newForm('self', S.mine); render(); };
+  $$('[data-slot]').forEach(function (b) { b.onclick = function () { syncForm(); var n = Number(b.dataset.slot); S.form.slotIdx = n; takePhoto('#cam-reg', onSlotPhoto, 'Ảnh ' + (n + 1) + ': ' + PHOTO_TIPS[n].toLowerCase()); }; });
+  if ((el = $('#reg-form'))) el.onsubmit = function (e) { e.preventDefault(); submitForm(false); };
+  if ((el = $('#dup-yes'))) el.onclick = function () { S.form.dup = null; submitForm(true); };
+  if ((el = $('#dup-no'))) el.onclick = function () { syncForm(); S.form.dup = null; render(); };
+  if ((el = $('#form-cancel'))) el.onclick = function () {
+    if (S.form) S.form.slots.forEach(function (s) { if (s && s.preview) URL.revokeObjectURL(s.preview); });
+    if (S.form && S.form.mode === 'self') { S.form = null; S.editingMine = false; } else { S.form = newForm('desk'); S.adminTab = 'list'; }
+    render();
+  };
+  if ((el = $('#pin-form'))) {
+    $('#pin').focus();
+    el.onsubmit = function (e) {
+      e.preventDefault();
+      if ($('#pin').value === String(S.secret.pin || SECRET_DEFAULTS.pin)) { S.admin = true; render(); loadEngine().catch(function () {}); }
+      else { var er = $('#pin-err'); er.textContent = 'Mã PIN không đúng. Thử lại.'; er.style.color = 'var(--bad)'; $('#pin').value = ''; }
+    };
+  }
+  if ((el = $('#lock'))) el.onclick = function () { S.admin = false; render(); };
+  if ((el = $('#preview-docs'))) el.onclick = function () { go('tai-lieu'); };
+  $$('[data-atab]').forEach(function (b) { b.onclick = function () { syncForm(); S.adminTab = b.dataset.atab; render(); }; });
+  $$('[data-filter]').forEach(function (b) { b.onclick = function () { S.filter = b.dataset.filter; render(); }; });
+  if ((el = $('#q'))) el.oninput = function () { S.query = el.value; refreshList(); };
+  if ((el = $('#rows'))) el.onclick = function (e) { var b = e.target.closest('[data-open]'); if (b) openDetail(b.dataset.open); };
+  if ((el = $('#set-form'))) el.onsubmit = function (e) { e.preventDefault(); saveSettings(); };
+  if ((el = $('#export'))) el.onclick = exportCsv;
+  if ((el = $('#reset'))) el.onclick = resetAll;
+  $$('[data-dmove]').forEach(function (b) { b.onclick = function () { syncDocEdit(); var i = Number(b.dataset.dmove), j = i + Number(b.dataset.dir), a = S.docEdit.items; var t = a[i]; a[i] = a[j]; a[j] = t; $('#view').innerHTML = ''; render(); }; });
+  $$('[data-ddel]').forEach(function (b) { b.onclick = function () { syncDocEdit(); var i = Number(b.dataset.ddel), it = S.docEdit.items[i]; ask('Xoá tab tài liệu?', 'Xoá "' + (it.title || 'Tài liệu') + '" khỏi danh sách. Thay đổi chỉ áp dụng khi bấm Lưu tài liệu.', 'Xoá', function () { S.docEdit.items.splice(i, 1); $('#view').innerHTML = ''; render(); }, true); }; });
+  $$('[data-dadd]').forEach(function (b) { b.onclick = function () {
+    syncDocEdit(); var t = b.dataset.dadd;
+    var tpl = t === 'timeline' ? '08:00 | Tên hoạt động | Địa điểm' : t === 'checklist' ? '# Nhóm việc\n- Việc cần làm | Người phụ trách' : '# Tiêu đề mục\nĐoạn văn nội dung.\n- Gạch đầu dòng';
+    S.docEdit.items.push({ key: 'doc-' + rid(), title: t === 'timeline' ? 'Lịch trình' : t === 'checklist' ? 'Danh sách việc' : 'Tài liệu mới', type: t, text: tpl, prev: null });
+    render(); var x = $('#d-text-' + (S.docEdit.items.length - 1)); if (x) { x.focus(); x.scrollIntoView({ block: 'center' }); }
+  }; });
+  if ((el = $('#d-save'))) el.onclick = saveDocs;
+  if ((el = $('#d-discard'))) el.onclick = function () { S.docEdit = null; render(); };
+  if ((el = $('#d-preview'))) el.onclick = function () { go('tai-lieu'); };
+  drawQr();
+}
+function refreshData() {
+  if (S.route === 'checkin') refreshCheckinData();
+  if (S.route === 'quan-tri' && S.admin) refreshList();
+  if (S.route === 'tai-lieu') refreshChecklist();
+  if (S.detail) renderDetail();
+}
+
+/* ================= Khởi động ================= */
+$('#cam-checkin').addEventListener('change', function (e) { var f = e.target.files && e.target.files[0]; if (f) onCheckinPhoto(f); });
+$('#cam-reg').addEventListener('change', function (e) { var f = e.target.files && e.target.files[0]; if (f) onSlotPhoto(f); });
+$('#engine').addEventListener('click', function () { if (S.engine === 'error' || S.engine === 'idle') loadEngine().catch(function () {}); });
+document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; if ($('#cam-modal')) stopCam(); else if (S.detail) closeDetail(); });
+['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function (ev) { window.addEventListener(ev, function () { lastTouch = Date.now(); }, { passive: true }); });
+setInterval(function () {
+  if (!S.session || S.route !== 'tai-lieu') return;
+  var lim = Number(S.cfg.autoReturn) || 0, el = $('#timer');
+  if (!lim) { if (el) el.textContent = ''; return; }
+  var left = Math.max(0, lim - Math.floor((Date.now() - lastTouch) / 1000));
+  if (el) el.textContent = 'Tự quay về check-in sau ' + left + ' giây';
+  if (left === 0) endSession();
+}, 1000);
+window.addEventListener('hashchange', route);
+
+applyBrand();
+renderNav();
+render();
+connect();
+})();
+</script>
+</body>
+</html>

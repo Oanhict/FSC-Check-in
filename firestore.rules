@@ -1,0 +1,86 @@
+rules_version = '2';
+
+// Quy tắc bảo mật cho FSC Check-in.
+// Dán toàn bộ nội dung file này vào Firebase → Firestore Database → Rules → Publish.
+// Danh sách email Ban tổ chức bên dưới phải giống file firebase-config.js.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in [
+          'oanhnn4@fpt.edu.vn'
+        ];
+    }
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function notCheckedIn(uid) {
+      return !exists(/databases/$(database)/documents/regs/$(uid))
+        || get(/databases/$(database)/documents/regs/$(uid)).data.checkedInAt == null;
+    }
+
+    // Thông tin sự kiện (tên, ngày, địa điểm): ai cũng đọc, chỉ Ban tổ chức sửa.
+    match /config/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Tài liệu hội thảo và checklist: chỉ Ban tổ chức, hoặc khách đã được
+    // Ban tổ chức check-in đúng ngày hội thảo (checkedInDay == eventDate).
+    function unlockedGuest() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/regs/$(request.auth.uid))
+        && exists(/databases/$(database)/documents/config/settings)
+        && get(/databases/$(database)/documents/regs/$(request.auth.uid)).data.get('checkedInDay', null)
+           == get(/databases/$(database)/documents/config/settings).data.eventDate;
+    }
+    match /content/{id} {
+      allow read: if isAdmin() || unlockedGuest();
+      allow write: if isAdmin();
+    }
+
+    // Mã PIN, ngưỡng nhận diện: chỉ Ban tổ chức.
+    match /secret/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Hồ sơ đăng ký. Khách chỉ đọc và ghi hồ sơ của chính mình,
+    // không tự đánh dấu check-in, không sửa sau khi đã check-in.
+    match /regs/{uid} {
+      allow read: if isAdmin() || isSelf(uid);
+      allow create: if isAdmin() || (isSelf(uid)
+        && request.resource.data.keys().hasOnly(['name', 'position', 'org', 'faces', 'avatar', 'updatedAt', 'createdAt', 'source', 'consent', 'checkedInAt'])
+        && request.resource.data.source == 'self'
+        && request.resource.data.checkedInAt == null
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 120
+        && request.resource.data.faces is list && request.resource.data.faces.size() <= 3);
+      allow update: if isAdmin() || (isSelf(uid)
+        && resource.data.checkedInAt == null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'position', 'org', 'faces', 'avatar', 'updatedAt'])
+        && request.resource.data.faces.size() <= 3);
+      allow delete: if isAdmin();
+    }
+
+    // 3 ảnh đăng ký.
+    match /regphotos/{uid} {
+      allow read: if isAdmin() || isSelf(uid);
+      allow write: if isAdmin() || (isSelf(uid) && notCheckedIn(uid)
+        && request.resource.data.keys().hasOnly(['photos', 'updatedAt'])
+        && request.resource.data.photos is list && request.resource.data.photos.size() <= 3);
+    }
+
+    // Ảnh và giờ check-in tại cổng: chỉ Ban tổ chức.
+    match /checkins/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
