@@ -164,7 +164,7 @@ main { padding-block: 20px 48px; }
 .form { display: grid; gap: 14px; }
 .photos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .slot { aspect-ratio: 3 / 4; max-width: 100%; border: 2px dashed var(--line); border-radius: var(--r-md); background: var(--sunk); position: relative; overflow: hidden; display: grid; place-items: center; align-content: center; gap: 4px; color: var(--muted); font-size: 13px; font-weight: 600; text-align: center; padding: 6px; cursor: pointer; width: 100%; }
-button.slot:hover { border-color: var(--accent); color: var(--accent); }
+button.slot:hover:not([disabled]) { border-color: var(--accent); color: var(--accent); }
 .slot .plus { font-size: 26px; line-height: 1; font-weight: 400; }
 .slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .slot .tag { position: absolute; left: 6px; right: 6px; bottom: 6px; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 3px 6px; background: var(--surface); color: var(--ink); }
@@ -626,7 +626,7 @@ function waitFor(test, ms) {
 function loadEngine() {
   if (enginePromise) return enginePromise;
   setEngine('loading');
-  enginePromise = waitFor(function () { return !!window.faceapi; }, 25000).then(function () {
+  var work = waitFor(function () { return !!window.faceapi; }, 25000).then(function () {
     var fa = window.faceapi;
     return fa.tf.setBackend('webgl').catch(function () { return false; }).then(function (ok) {
       if (!ok) return fa.tf.setBackend('cpu');
@@ -635,17 +635,28 @@ function loadEngine() {
         fa.nets.tinyFaceDetector.loadFromUri('model'),
         fa.nets.faceLandmark68Net.loadFromUri('model'),
         fa.nets.faceRecognitionNet.loadFromUri('model')
-      ]);
+      ]).catch(function (e) {
+        throw new Error('Không tải được thư mục "model" (' + (e && e.message ? e.message : e) + '). Kiểm tra đã tải đủ thư mục model lên chưa.');
+      });
     });
-  }).then(function () { setEngine('ready'); refreshEngineBound(); }).catch(function (e) {
+  });
+  var timeout = new Promise(function (res, rej) { setTimeout(function () { rej(new Error('Tải bộ nhận diện quá lâu. Kiểm tra kết nối mạng rồi thử lại.')); }, 120000); });
+  enginePromise = Promise.race([work, timeout]).then(function () { setEngine('ready'); refreshEngineBound(); }).catch(function (e) {
     enginePromise = null; setEngine('error', e && e.message ? e.message : String(e)); refreshEngineBound();
     throw e;
   });
   return enginePromise;
 }
+function engineNoteHtml() {
+  if (S.engine === 'error') return '<span style="color:var(--bad)">Chưa tải được bộ nhận diện: ' + h(S.engineErr || 'lỗi không rõ') + '</span> <button class="btn sm" type="button" data-engine-retry>Thử lại</button>';
+  return 'Đang tải bộ nhận diện khuôn mặt (khoảng 8 MB, lần đầu mất 10–60 giây). Vẫn chụp được ngay, ảnh sẽ được kiểm tra khi tải xong.';
+}
 function refreshEngineBound() {
-  $$('[data-needs-engine]').forEach(function (b) { b.disabled = S.engine !== 'ready' || b.dataset.block === '1'; });
-  var n = $('#engine-note'); if (n) n.hidden = S.engine === 'ready';
+  $$('[data-needs-engine]').forEach(function (b) { b.disabled = b.dataset.block === '1'; });
+  var n = $('#engine-note');
+  if (n) { n.hidden = S.engine === 'ready'; n.innerHTML = engineNoteHtml(); }
+  $$('[data-engine-retry]').forEach(function (b) { b.onclick = function () { loadEngine().catch(function () {}); refreshEngineBound(); }; });
+  $$('.slot .tag').forEach(function (t) { if (t.dataset.wait && S.engine === 'ready') t.textContent = 'Đang kiểm tra…'; });
 }
 
 function fileToCanvas(file) {
@@ -745,7 +756,7 @@ function viewSetup() {
 }
 function viewRegisterPage() {
   var intro = '<div class="eyebrow">Đăng ký trước hội thảo</div><h1 class="lead-h" style="margin-top:6px">Đăng ký khuôn mặt để check-in</h1>' +
-    '<p class="lead-p">Điền thông tin và chụp 3 ảnh khuôn mặt. Ngày <b>' + fmtDay(eventDay()) + '</b>, quý khách chỉ cần nhìn vào camera tại cổng trường là được check-in, sau đó mục Check-in và Tài liệu hội thảo sẽ mở trên trang này.</p>';
+    '<p class="lead-p">Điền thông tin và chụp 3 ảnh khuôn mặt. Ngày <b>' + fmtDay(eventDay()) + '</b>, quý khách quay lại website check-in và Tài liệu hội thảo sẽ mở trên trang này.</p>';
   if (S.dbState === 'connecting') return '<section class="panel">' + intro + '<p class="muted" style="margin-top:16px">Đang tải…</p></section>';
   if (S.dbState === 'setup') return viewSetup();
   if (S.dbState !== 'ok' || !S.uid) {
@@ -792,9 +803,9 @@ function newForm(mode, r) {
 function formHtml() {
   var f = S.form, ready = S.engine === 'ready';
   var slots = f.slots.map(function (s, i) {
-    if (!s) return '<button class="slot" type="button" data-slot="' + i + '" data-needs-engine' + (ready ? '' : ' disabled') + '><span class="plus">+</span>' + PHOTO_TIPS[i] + '</button>';
-    return '<button class="slot ' + (s.state === 'ok' ? 'ok' : s.state === 'bad' ? 'bad' : '') + '" type="button" data-slot="' + i + '" data-needs-engine' + (ready && s.state !== 'busy' ? '' : ' disabled') + ' aria-label="Chụp lại ảnh ' + (i + 1) + '">' +
-      (s.preview ? '<img src="' + h(s.preview) + '" alt="">' : '') + '<span class="tag">' + h(s.label) + '</span></button>';
+    if (!s) return '<button class="slot" type="button" data-slot="' + i + '" data-needs-engine><span class="plus">+</span>' + PHOTO_TIPS[i] + '</button>';
+    return '<button class="slot ' + (s.state === 'ok' ? 'ok' : s.state === 'bad' ? 'bad' : '') + '" type="button" data-slot="' + i + '" data-needs-engine' + (s.state !== 'busy' ? '' : ' data-block="1" disabled') + ' aria-label="Chụp lại ảnh ' + (i + 1) + '">' +
+      (s.preview ? '<img src="' + h(s.preview) + '" alt="">' : '') + '<span class="tag"' + (s.state === 'busy' && S.engine !== 'ready' ? ' data-wait="1"' : '') + '>' + h(s.state === 'busy' && S.engine !== 'ready' ? 'Chờ tải nhận diện…' : s.label) + '</span></button>';
   }).join('');
   var editing = !!f.id;
   var title = f.mode === 'desk' ? (editing ? 'Cập nhật đăng ký' : 'Đăng ký hộ khách mời') : (editing ? 'Sửa đăng ký' : 'Thông tin đăng ký');
@@ -805,7 +816,7 @@ function formHtml() {
     '<div class="field"><label for="f-org">Trường / Đơn vị công tác</label><input class="input" id="f-org" autocomplete="organization" value="' + h(f.org) + '" placeholder="THPT FPT Tây Hà Nội"></div>' +
     '<div class="field"><label>Ảnh khuôn mặt (đủ 3 ảnh)</label><div class="photos">' + slots + '</div>' +
     (editing && f.keepOld ? '<p class="hint">Để trống nếu muốn giữ 3 ảnh cũ. Chụp ảnh mới thì cần chụp đủ cả 3.</p>' : '<p class="hint">Chạm vào từng ô để chụp. Đứng nơi đủ sáng, không đeo khẩu trang hay kính râm, chỉ một người trong khung.</p>') +
-    '<p class="hint" id="engine-note"' + (ready ? ' hidden' : '') + '>Đang tải bộ nhận diện khuôn mặt (khoảng 8 MB), các ô chụp sẽ bật khi sẵn sàng.</p></div>' +
+    '<p class="hint" id="engine-note"' + (ready ? ' hidden' : '') + '>' + engineNoteHtml() + '</p></div>' +
     (f.mode === 'self' ? '<label class="check"><input type="checkbox" id="f-consent"' + (f.consent ? ' checked' : '') + '><span>Tôi đồng ý để Ban tổ chức dùng ảnh khuôn mặt của tôi cho việc check-in và đối chiếu tại hội thảo.</span></label>' : '') +
     dup +
     '<div class="chips"><button class="btn primary big" type="submit" style="flex:1 1 220px"' + (f.saving ? ' disabled' : '') + '>' + (f.saving ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Gửi đăng ký') + '</button>' +
@@ -889,7 +900,7 @@ function viewCheckin() {
         (ci.img ? '<img class="shot" src="' + h(ci.img) + '" alt="Ảnh vừa chụp">' : '<div class="guide" aria-hidden="true"></div>') +
         '<div class="stage-msg" aria-live="polite">' + msg + '</div>' +
       '</div>' + help +
-      '<div class="actions"><button class="btn primary big" id="ci-shoot" type="button" data-needs-engine' + (ci.s === 'busy' ? ' data-block="1"' : '') + (!ready || ci.s === 'busy' ? ' disabled' : '') + '>' + (ci.s === 'fail' || ci.s === 'ok' ? 'Chụp lại' : 'Chụp ảnh check-in') + '</button></div>' +
+      '<div class="actions"><button class="btn primary big" id="ci-shoot" type="button" data-needs-engine' + (ci.s === 'busy' ? ' data-block="1"' : '') + (ci.s === 'busy' ? ' disabled' : '') + '>' + (ci.s === 'fail' || ci.s === 'ok' ? 'Chụp lại' : 'Chụp ảnh check-in') + '</button></div>' +
       '<ol class="steps"><li><b>1</b>Bấm nút, camera trước sẽ mở</li><li><b>2</b>Nhìn thẳng, chụp một ảnh rõ mặt</li><li><b>3</b>Xem tài liệu dành cho quý khách</li></ol>' +
     '</section>' +
     '<aside class="panel"><div class="eyebrow">Đã check-in</div>' +
