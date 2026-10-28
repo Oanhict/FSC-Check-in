@@ -3,9 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#12305A">
+<meta name="theme-color" content="#0B4A8F">
 <title>FSC Check-in</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23E2621B'/%3E%3Ctext x='32' y='41' font-family='Arial' font-weight='700' font-size='22' text-anchor='middle' fill='white'%3EFSC%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="brand/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="brand/icon-192.png">
+<link rel="apple-touch-icon" href="brand/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="FSC Check-in">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap">
 <style>
@@ -23,10 +27,10 @@ img { max-width: 100%; }
   --ink: #0E1B2E;
   --muted: #59667D;
   --line: #D9DFE9;
-  --brand: #12305A;
+  --brand: #0B4A8F;
   --brand-ink: #FFFFFF;
   --brand-muted: #B8C7DE;
-  --accent: #E2621B;
+  --accent: #E8601C;
   --accent-ink: #FFFFFF;
   --accent-soft: #FCEBDF;
   --ok: #10806A;
@@ -35,7 +39,7 @@ img { max-width: 100%; }
   --warn-soft: #FDF0D5;
   --bad: #BE2639;
   --bad-soft: #FBE3E6;
-  --heading: #12305A;
+  --heading: #0B4A8F;
   --shadow: 0 1px 2px rgba(14,27,46,.06), 0 8px 24px rgba(14,27,46,.06);
   --font: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
   --r-lg: 20px;
@@ -73,9 +77,12 @@ h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.2; }
 .band { background: var(--brand); color: var(--brand-ink); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
 .band .wrap { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; padding-block: 12px; }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 240px; }
-.mark { width: 40px; height: 40px; border-radius: 11px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 800; font-size: 15px; letter-spacing: .02em; flex: none; }
+.mark { height: 40px; padding: 0 9px; border-radius: 11px; background: #FFFFFF; display: grid; place-items: center; flex: none; } .mark img { height: 26px; width: auto; display: block; } .mark-old { font-size: 15px; letter-spacing: .02em; flex: none; }
 .brand-text { min-width: 0; }
-.brand-name { font-weight: 800; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand-greet { color: var(--brand-muted); font-size: 13px; font-weight: 600; line-height: 1.3; }
+.brand-school { font-weight: 800; font-size: 18px; line-height: 1.25; }
+.brand-greet, .brand-school { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 520px) { .brand-school { font-size: 16px; } }
 .brand-venue { color: var(--brand-muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 nav.tabs { display: flex; gap: 4px; background: rgba(255,255,255,.08); padding: 4px; border-radius: 999px; }
 nav.tabs a { color: var(--brand-muted); text-decoration: none; font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
@@ -277,6 +284,24 @@ textarea.doc-text { font-family: ui-monospace, Menlo, Consolas, monospace; font-
 .verdict { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding-top: 14px; border-top: 1px solid var(--line); }
 .verdict .spacer { flex: 1 1 auto; }
 
+
+/* Brand imagery */
+.banner { display: block; width: 100%; max-width: 100%; aspect-ratio: 2 / 1; object-fit: cover; object-position: center 30%; border-radius: var(--r-md); margin-bottom: 18px; background: var(--sunk); }
+.mascot { width: 88px; height: 88px; max-width: 100%; border-radius: 50%; object-fit: cover; flex: none; background: var(--sunk); box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--accent); }
+.mascot.lg { width: 120px; height: 120px; }
+.hello { display: flex; gap: 16px; align-items: center; }
+.hello > div { min-width: 0; flex: 1; }
+.site-foot { display: flex; gap: 14px 22px; align-items: center; justify-content: center; flex-wrap: wrap; padding-block: 20px 36px; border-top: 1px solid var(--line); margin-top: 8px; color: var(--muted); font-size: 13px; }
+.site-foot img { height: 44px; width: auto; flex: none; }
+.site-foot-info { min-width: 0; flex: 0 1 460px; display: grid; gap: 3px; }
+.site-foot-info p { margin: 0; }
+.site-foot-info .k { font-weight: 600; color: var(--ink); }
+.site-foot a { color: var(--heading); font-weight: 600; text-decoration: none; }
+.site-foot a:hover { text-decoration: underline; }
+.site-foot-name { font-size: 15px; font-weight: 800 !important; }
+@media (max-width: 520px) { .site-foot { flex-direction: column; text-align: center; } .site-foot-info { flex: none; width: 100%; } }
+@media (max-width: 520px) { .mascot.lg { width: 96px; height: 96px; } .mascot { width: 72px; height: 72px; } }
+
 /* Camera */
 .modal > .panel.cam { max-width: 640px; }
 .cam-view { aspect-ratio: 4 / 3; max-width: 100%; background: var(--sunk); border-radius: var(--r-md); overflow: hidden; display: grid; place-items: center; position: relative; color: var(--muted); text-align: center; }
@@ -298,10 +323,10 @@ textarea.doc-text { font-family: ui-monospace, Menlo, Consolas, monospace; font-
 <header class="band">
   <div class="wrap">
     <div class="brand">
-      <div class="mark" aria-hidden="true">FSC</div>
+      <div class="mark"><img src="brand/fpt-mark.png" alt="FPT Schools" width="47" height="28"></div>
       <div class="brand-text">
-        <div class="brand-name" id="brand-name">Hội thảo tháng 12</div>
-        <div class="brand-venue" id="brand-venue">FSC Tây Hà Nội</div>
+        <div class="brand-greet" id="brand-name">Chào mừng Quý Thầy/Cô giáo</div>
+        <div class="brand-school" id="brand-venue">Trường THPT FPT Tây Hà Nội</div>
       </div>
     </div>
     <nav class="tabs" id="tabs" aria-label="Chuyển màn hình"></nav>
@@ -314,12 +339,20 @@ textarea.doc-text { font-family: ui-monospace, Menlo, Consolas, monospace; font-
   <div id="view"></div>
 </main>
 <footer class="wrap foot" id="foot"></footer>
+<footer class="wrap site-foot">
+  <img src="brand/fpt-schools-logo.png" alt="FPT Schools" width="101" height="44">
+  <div class="site-foot-info">
+    <a class="site-foot-name" href="https://fschool.fpt.edu.vn/tay-ha-noi/" target="_blank" rel="noopener">Trường THPT FPT Tây Hà Nội</a>
+    <p><span class="k">Địa chỉ:</span> Tổ dân phố số 14 (hoặc TDP 12), Phố Kiều Mai, Phường Xuân Phương, TP Hà Nội</p>
+    <p><span class="k">Hotline:</span> <a href="tel:02473069369">02473 069 369</a></p>
+  </div>
+</footer>
 
 <input type="file" id="cam-checkin" accept="image/*" capture="user" class="sr" tabindex="-1" aria-hidden="true">
 <input type="file" id="cam-reg" accept="image/*" capture="user" class="sr" tabindex="-1" aria-hidden="true">
 <div id="overlay"></div>
 
-<script src="vendor/face-api.js"></script>
+<script src="vendor/face-api.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js';document.head.appendChild(s);"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -410,7 +443,7 @@ var SAMPLE_DOCS = [
     ] }
 ];
 
-var PUBLIC_DEFAULTS = { eventName: 'Hội thảo tháng 12', venue: 'FSC Tây Hà Nội', eventDate: '2026-12-04', autoReturn: 120, regOpen: true, regNote: '' };
+var PUBLIC_DEFAULTS = { headerTitle: 'Chào mừng Quý Thầy/Cô giáo', headerSub: 'Trường THPT FPT Tây Hà Nội', eventName: 'Hội thảo tháng 12', venue: 'FSC Tây Hà Nội', eventDate: '2026-12-04', autoReturn: 120, regOpen: true, regNote: '' };
 var SECRET_DEFAULTS = { pin: '1234', threshold: 0.5 };
 var PHOTO_TIPS = ['Nhìn thẳng', 'Hơi quay trái', 'Hơi quay phải'];
 
@@ -597,8 +630,8 @@ function renderNotice() {
 }
 
 function applyBrand() {
-  $('#brand-name').textContent = S.cfg.eventName || PUBLIC_DEFAULTS.eventName;
-  $('#brand-venue').textContent = S.cfg.venue || '';
+  $('#brand-name').textContent = S.cfg.headerTitle || PUBLIC_DEFAULTS.headerTitle;
+  $('#brand-venue').textContent = S.cfg.headerSub || PUBLIC_DEFAULTS.headerSub;
 }
 
 function renderNav() {
@@ -620,28 +653,56 @@ function setEngine(s, err) {
 function waitFor(test, ms) {
   return new Promise(function (res, rej) {
     var t0 = Date.now();
-    (function tick() { if (test()) return res(); if (Date.now() - t0 > ms) return rej(new Error('Không tải được thư viện nhận diện. Kiểm tra kết nối mạng.')); setTimeout(tick, 150); })();
+    (function tick() { if (test()) return res(); if (Date.now() - t0 > ms) return rej(new Error('Không tải được thư viện nhận diện (vendor/face-api.js). Kiểm tra kết nối mạng hoặc tải thư mục vendor lên.')); setTimeout(tick, 150); })();
+  });
+}
+// Tải thư viện face-api: thử file trên trang (vendor/), không được thì lấy từ jsDelivr.
+var FACE_CDN = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js';
+var engineTries = 0;
+function loadScript(src) {
+  return new Promise(function (res, rej) {
+    var s = document.createElement('script');
+    s.src = src + (src.indexOf('?') < 0 ? '?t=' + Date.now() : '');
+    s.onload = res; s.onerror = function () { s.remove(); rej(new Error('load failed')); };
+    document.head.appendChild(s);
+  });
+}
+function ensureLib() {
+  if (window.faceapi) return Promise.resolve();
+  var first = engineTries++ === 0;
+  var wait = first ? waitFor(function () { return !!window.faceapi; }, 30000).catch(function () {}) : Promise.resolve();
+  return wait.then(function () {
+    if (window.faceapi) return;
+    return loadScript('vendor/face-api.js').catch(function () { return loadScript(FACE_CDN); }).then(function () {
+      if (!window.faceapi) throw new Error('x');
+    }).catch(function () {
+      throw new Error('Không tải được thư viện nhận diện (vendor/face-api.js). Kiểm tra kết nối mạng hoặc tải thư mục vendor lên.');
+    });
   });
 }
 function loadEngine() {
   if (enginePromise) return enginePromise;
   setEngine('loading');
-  var work = waitFor(function () { return !!window.faceapi; }, 25000).then(function () {
+  var work = ensureLib().then(function () {
     var fa = window.faceapi;
     return fa.tf.setBackend('webgl').catch(function () { return false; }).then(function (ok) {
       if (!ok) return fa.tf.setBackend('cpu');
     }).then(function () { return fa.tf.ready(); }).then(function () {
-      return Promise.all([
-        fa.nets.tinyFaceDetector.loadFromUri('model'),
-        fa.nets.faceLandmark68Net.loadFromUri('model'),
-        fa.nets.faceRecognitionNet.loadFromUri('model')
-      ]).catch(function (e) {
-        throw new Error('Không tải được thư mục "model" (' + (e && e.message ? e.message : e) + '). Kiểm tra đã tải đủ thư mục model lên chưa.');
+      var nets = function (base) { return Promise.all([
+        fa.nets.tinyFaceDetector.loadFromUri(base),
+        fa.nets.faceLandmark68Net.loadFromUri(base),
+        fa.nets.faceRecognitionNet.loadFromUri(base)
+      ]); };
+      return nets('model').catch(function () {
+        return nets('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model/');
+      }).catch(function (e) {
+        throw new Error('Không tải được mô hình nhận diện (' + (e && e.message ? e.message : e) + '). Kiểm tra kết nối mạng hoặc tải thư mục model lên.');
       });
     });
   });
   var timeout = new Promise(function (res, rej) { setTimeout(function () { rej(new Error('Tải bộ nhận diện quá lâu. Kiểm tra kết nối mạng rồi thử lại.')); }, 120000); });
-  enginePromise = Promise.race([work, timeout]).then(function () { setEngine('ready'); refreshEngineBound(); }).catch(function (e) {
+  enginePromise = Promise.race([work, timeout]).then(function () { setEngine('ready'); refreshEngineBound(); recheckPending(); }).catch(function (e) {
+    if (e && typeof e === 'object') e.engine = true;
     enginePromise = null; setEngine('error', e && e.message ? e.message : String(e)); refreshEngineBound();
     throw e;
   });
@@ -655,7 +716,7 @@ function refreshEngineBound() {
   $$('[data-needs-engine]').forEach(function (b) { b.disabled = b.dataset.block === '1'; });
   var n = $('#engine-note');
   if (n) { n.hidden = S.engine === 'ready'; n.innerHTML = engineNoteHtml(); }
-  $$('[data-engine-retry]').forEach(function (b) { b.onclick = function () { loadEngine().catch(function () {}); refreshEngineBound(); }; });
+  $$('[data-engine-retry]').forEach(function (b) { b.onclick = function () { if (S.form) S.form.slots.forEach(function (s) { if (s && s.state === 'pending') { s.state = 'busy'; } }); loadEngine().catch(function () { if (S.form) S.form.slots.forEach(function (s) { if (s && s.state === 'busy' && s.canvas) { s.state = 'pending'; s.label = 'Chưa kiểm tra'; } }); render(); }); render(); }; });
   $$('.slot .tag').forEach(function (t) { if (t.dataset.wait && S.engine === 'ready') t.textContent = 'Đang kiểm tra…'; });
 }
 
@@ -755,7 +816,7 @@ function viewSetup() {
     '<p class="muted" style="margin:0">Trang cần một dự án Firebase để lưu đăng ký và check-in. Mở file <code>firebase-config.js</code> trong kho GitHub, dán cấu hình Firebase của bạn vào rồi lưu lại. Xem các bước trong file <code>README.md</code>.</p></section>';
 }
 function viewRegisterPage() {
-  var intro = '<div class="eyebrow">Đăng ký trước hội thảo</div><h1 class="lead-h" style="margin-top:6px">Đăng ký khuôn mặt để check-in</h1>' +
+  var intro = '<img class="banner" src="brand/banner-register.jpg" alt="Học sinh và linh vật FPT Schools tại sân trường">' + '<div class="eyebrow">Đăng ký trước hội thảo</div><h1 class="lead-h" style="margin-top:6px">Đăng ký khuôn mặt để check-in</h1>' +
     '<p class="lead-p">Điền thông tin và chụp 3 ảnh khuôn mặt. Ngày <b>' + fmtDay(eventDay()) + '</b>, quý khách quay lại website check-in và Tài liệu hội thảo sẽ mở trên trang này.</p>';
   if (S.dbState === 'connecting') return '<section class="panel">' + intro + '<p class="muted" style="margin-top:16px">Đang tải…</p></section>';
   if (S.dbState === 'setup') return viewSetup();
@@ -772,7 +833,7 @@ function viewRegisterPage() {
   return '<div class="two even">' +
     '<section class="panel">' + intro +
       (S.cfg.regNote ? '<div class="notice" style="margin:16px 0 0">' + h(S.cfg.regNote) + '</div>' : '') +
-      '<ol class="steps" style="grid-template-columns:minmax(0,1fr)"><li><b>1</b>Điền họ tên, chức vụ, trường hoặc đơn vị công tác</li><li><b>2</b>Chụp 3 ảnh: nhìn thẳng, hơi quay trái, hơi quay phải</li><li><b>3</b>Khi đến hội thảo, Thầy/Cô vui lòng nhìn vào camera tại cổng để check-in</li></ol>' +
+      '<ol class="steps" style="grid-template-columns:minmax(0,1fr)"><li><b>1</b>Điền họ tên, chức vụ, trường hoặc đơn vị công tác</li><li><b>2</b>Chụp 3 ảnh: nhìn thẳng, hơi quay trái, hơi quay phải</li><li><b>3</b>Khi tới hội thảo, Thầy/Cô vui lòng check in tại cổng trường hoặc các không gian tổ chức hội thảo</li></ol>' +
       '<p class="hint" style="margin-top:16px">Ảnh chỉ Ban tổ chức xem được, dùng để check-in và đối chiếu, được xoá sau hội thảo.</p>' +
     '</section>' + formHtml() + '</div>';
 }
@@ -783,13 +844,14 @@ function viewMine(intro) {
     viewMine.loading = true;
     S.db.doc('regphotos/' + r.id).get().then(function (d) { S.minePhotos = d.exists ? (d.data().photos || []) : []; viewMine.loading = false; if (S.route === 'dang-ky' && !S.form) render(); }).catch(function () { S.minePhotos = []; viewMine.loading = false; });
   }
+  var statusPic = '<img class="mascot" src="brand/mascot-thumbs.jpg" alt="">';
   var status = guestUnlocked()
     ? '<div class="notice okay" style="margin:0"><strong>Đã check-in lúc ' + fmtTime(r.checkedInAt) + ' ngày ' + fmtDay(eventDay()) + '.</strong> Mục Check-in và Tài liệu đã mở cho quý khách. <a href="#tai-lieu">Xem tài liệu</a></div>'
     : '<div class="notice okay" style="margin:0"><strong>Đã đăng ký thành công.</strong> Ngày ' + fmtDay(eventDay()) + ', quý khách nhìn vào camera tại cổng trường để check-in. Sau khi check-in, tài liệu hội thảo sẽ mở ngay trên trang này.</div>';
   var shots = (photos || []).filter(isDataImg).map(function (p, i) { return '<div class="slot static ok"><img src="' + p + '" alt="Ảnh đăng ký ' + (i + 1) + '"><span class="tag">' + PHOTO_TIPS[i] + '</span></div>'; }).join('');
   return '<div class="two even"><section class="panel">' + intro + '</section>' +
     '<section class="panel form"><div class="me">' + avatarHtml(r) + '<div><h2>' + h(r.name) + '</h2><div class="meta">' + h([r.position, r.org].filter(Boolean).join(' · ')) + '</div></div></div>' +
-    status +
+    '<div class="hello">' + statusPic + '<div>' + status + '</div></div>' +
     '<div class="photos">' + (photos === null ? '<p class="muted">Đang tải ảnh…</p>' : shots) + '</div>' +
     (r.checkedInAt ? '' : '<div class="chips"><button class="btn" type="button" id="edit-mine">Sửa thông tin hoặc chụp lại</button></div>') +
     '</section></div>';
@@ -812,7 +874,7 @@ function formHtml() {
   var dup = f.dup ? '<div class="warn"><span>Khuôn mặt này rất giống <b>' + h(f.dup) + '</b> đã đăng ký. Có chắc đây là người khác?</span><div class="chips"><button class="btn sm" type="button" id="dup-no">Kiểm tra lại</button><button class="btn sm dark" type="button" id="dup-yes">Vẫn lưu</button></div></div>' : '';
   return '<form class="panel form" id="reg-form" novalidate><h2 style="font-size:20px;font-weight:800">' + title + '</h2>' +
     '<div class="field"><label for="f-name">Họ và tên</label><input class="input" id="f-name" autocomplete="name" value="' + h(f.name) + '" placeholder="Nguyễn Thị Lan"></div>' +
-    '<div class="field"><label for="f-pos">Chức vụ</label><input class="input" id="f-pos" value="' + h(f.position) + '" placeholder="Giáo viên Tin học, Hiệu phó…"></div>' +
+    '<div class="field"><label for="f-pos">Chức vụ</label><input class="input" id="f-pos" value="' + h(f.position) + '" placeholder="Hiệu trưởng/Tổ trưởng CM/Giáo viên Tin học"></div>' +
     '<div class="field"><label for="f-org">Trường / Đơn vị công tác</label><input class="input" id="f-org" autocomplete="organization" value="' + h(f.org) + '" placeholder="THPT FPT Tây Hà Nội"></div>' +
     '<div class="field"><label>Ảnh khuôn mặt (đủ 3 ảnh)</label><div class="photos">' + slots + '</div>' +
     (editing && f.keepOld ? '<p class="hint">Để trống nếu muốn giữ 3 ảnh cũ. Chụp ảnh mới thì cần chụp đủ cả 3.</p>' : '<p class="hint">Chạm vào từng ô để chụp. Đứng nơi đủ sáng, không đeo khẩu trang hay kính râm, chỉ một người trong khung.</p>') +
@@ -835,17 +897,32 @@ function onSlotPhoto(file) {
   var s = { state: 'busy', label: 'Đang kiểm tra…', preview: null };
   f.slots[i] = s; f.dup = null; render();
   fileToCanvas(file).then(function (r) {
-    s.preview = r.url; render();
-    return describe(r.canvas).then(function (d) {
-      if (d.faces > 1) { s.state = 'bad'; s.label = 'Nhiều người'; toast('Có nhiều người trong ảnh. Chỉ để một người trong khung.'); }
-      else { s.state = 'ok'; s.label = 'Đạt'; s.v = d.descriptor; s.photo = toJpeg(r.canvas, 420, 0.72); s.thumb = faceThumb(r.canvas, d.box, 112); }
-      render();
-    });
+    s.preview = r.url; s.canvas = r.canvas; render();
+    checkSlot(s);
   }).catch(function (e) {
+    s.state = 'bad'; s.label = 'Lỗi ảnh';
+    toast(e && e.message ? e.message : 'Ảnh không dùng được');
+    render();
+  });
+}
+function checkSlot(s) {
+  s.state = 'busy'; s.label = 'Đang kiểm tra…';
+  return describe(s.canvas).then(function (d) {
+    if (d.faces > 1) { s.state = 'bad'; s.label = 'Nhiều người'; toast('Có nhiều người trong ảnh. Chỉ để một người trong khung.'); }
+    else { s.state = 'ok'; s.label = 'Đạt'; s.v = d.descriptor; s.photo = toJpeg(s.canvas, 420, 0.72); s.thumb = faceThumb(s.canvas, d.box, 112); }
+    render();
+  }).catch(function (e) {
+    if (e && e.engine) { s.state = 'pending'; s.label = 'Chưa kiểm tra'; render(); return; }
     s.state = 'bad'; s.label = e && e.code === 'TOO_FAR' ? 'Mặt quá nhỏ' : e && e.code === 'NO_FACE' ? 'Không thấy mặt' : 'Lỗi ảnh';
     toast(e && e.message ? e.message : 'Ảnh không dùng được');
     render();
   });
+}
+// Ảnh chụp lúc bộ nhận diện chưa sẵn sàng: kiểm tra lại khi tải xong.
+function recheckPending() {
+  if (!S.form) return;
+  S.form.slots.forEach(function (s) { if (s && s.state === 'pending' && s.canvas) checkSlot(s); });
+  render();
 }
 
 function submitForm(force) {
@@ -894,7 +971,7 @@ function viewCheckin() {
   var test = isEventDay() ? '' : '<div class="notice"><strong>Chế độ thử.</strong> Hôm nay chưa phải ngày hội thảo (' + fmtDay(eventDay()) + '). Nhận diện vẫn chạy để kiểm tra, nhưng không ghi check-in và không mở tài liệu cho khách.</div>';
   return test + '<div class="two">' +
     '<section class="panel">' +
-      '<div class="eyebrow">Check-in tại cổng</div><h1 class="lead-h" style="margin-top:6px">Chào mừng quý khách</h1>' +
+      '<div class="hello"><img class="mascot" src="brand/mascot-heart.jpg" alt=""><div><div class="eyebrow">Check-in tại cổng</div><h1 class="lead-h" style="margin-top:6px">Chào mừng quý khách</h1></div></div>' +
       '<p class="lead-p">Chụp một ảnh khuôn mặt để check-in. Khi được nhận diện, tài liệu hội thảo sẽ mở ra cho quý khách.</p>' +
       '<div class="stage" id="stage" data-s="' + h(ci.s) + '">' +
         (ci.img ? '<img class="shot" src="' + h(ci.img) + '" alt="Ảnh vừa chụp">' : '<div class="guide" aria-hidden="true"></div>') +
@@ -912,7 +989,7 @@ function viewCheckin() {
 /* --- Mục Check-in trên điện thoại của khách (chỉ hiện sau khi check-in đúng ngày) --- */
 function viewGuestCheckin() {
   var r = S.mine;
-  return '<div class="two even"><section class="panel form"><div class="eyebrow">Check-in của quý khách</div>' +
+  return '<div class="two even"><section class="panel form"><div class="hello"><img class="mascot" src="brand/mascot-thumbs.jpg" alt=""><div><div class="eyebrow">Check-in của quý khách</div><b>Chào mừng quý khách đến với hội thảo!</b></div></div>' +
     '<div class="me">' + avatarHtml(r) + '<div><h2>' + h(r.name) + '</h2><div class="meta">' + h([r.position, r.org].filter(Boolean).join(' · ')) + '</div></div></div>' +
     '<div class="notice okay" style="margin:0"><strong>Đã check-in thành công.</strong> Ban tổ chức đã ghi nhận quý khách có mặt tại ' + h(S.cfg.venue || 'trường') + '.</div>' +
     '<dl class="kv"><div><dt>Ngày</dt><dd>' + fmtDay(vnDay(r.checkedInAt)) + '</dd></div><div><dt>Giờ check-in</dt><dd>' + fmtTime(r.checkedInAt) + '</dd></div>' +
@@ -991,7 +1068,7 @@ function viewDocs() {
   var own = !S.isAdmin && guestUnlocked();
   if (!S.session && !S.admin && !own) {
     var msg = S.mine ? 'Quý khách đã đăng ký. Tài liệu sẽ mở ngay sau khi check-in bằng khuôn mặt tại cổng trường.' : 'Tài liệu hội thảo dành cho khách mời đã check-in bằng khuôn mặt tại cổng trường.';
-    return '<section class="panel locked"><div class="eyebrow">Tài liệu hội thảo</div><h2>Check-in để mở tài liệu</h2><p class="muted" style="margin:0">' + msg + '</p>' +
+    return '<section class="panel locked"><img class="mascot lg" src="brand/mascot-heart.jpg" alt=""><div class="eyebrow">Tài liệu hội thảo</div><h2>Check-in để mở tài liệu</h2><p class="muted" style="margin:0">' + msg + '</p>' +
       (S.isAdmin ? '<a class="btn primary" href="#checkin">Đến màn check-in</a>' : (S.mine ? '' : '<a class="btn primary" href="#dang-ky">Đăng ký khuôn mặt</a>')) + '</section>';
   }
   var r = S.session ? regById(S.session.id) : (own ? S.mine : null);
@@ -1313,6 +1390,8 @@ function viewDesk() {
 function viewSettings() {
   var c = S.cfg, s = S.secret;
   return '<form class="panel form" id="set-form"><div class="settings">' +
+    '<div class="field"><label for="s-head">Thanh đầu trang, dòng 1 (lời chào)</label><input class="input" id="s-head" value="' + h(c.headerTitle || PUBLIC_DEFAULTS.headerTitle) + '"></div>' +
+    '<div class="field"><label for="s-head2">Thanh đầu trang, dòng 2 (tên trường)</label><input class="input" id="s-head2" value="' + h(c.headerSub || PUBLIC_DEFAULTS.headerSub) + '"></div>' +
     '<div class="field"><label for="s-name">Tên sự kiện</label><input class="input" id="s-name" value="' + h(c.eventName) + '"></div>' +
     '<div class="field"><label for="s-venue">Địa điểm</label><input class="input" id="s-venue" value="' + h(c.venue) + '"></div>' +
     '<div class="field"><label for="s-date">Ngày diễn ra hội thảo (giờ Việt Nam)</label><input class="input" id="s-date" type="date" value="' + h(c.eventDate) + '"><span class="hint">Chỉ check-in trong ngày này mới được ghi nhận và mở tài liệu cho khách. Ngày khác, máy ở cổng chạy chế độ thử.</span></div>' +
@@ -1333,7 +1412,7 @@ function saveSettings() {
   if (!/^\d{4,8}$/.test(pin)) { toast('Mã PIN gồm 4 đến 8 chữ số.'); return; }
   var day = $('#s-date').value;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) { toast('Chọn ngày diễn ra hội thảo.'); return; }
-  var pub = { eventName: $('#s-name').value.trim() || PUBLIC_DEFAULTS.eventName, venue: $('#s-venue').value.trim(), eventDate: day, regNote: $('#s-note').value.trim(),
+  var pub = { headerTitle: $('#s-head').value.trim() || PUBLIC_DEFAULTS.headerTitle, headerSub: $('#s-head2').value.trim() || PUBLIC_DEFAULTS.headerSub, eventName: $('#s-name').value.trim() || PUBLIC_DEFAULTS.eventName, venue: $('#s-venue').value.trim(), eventDate: day, regNote: $('#s-note').value.trim(),
     autoReturn: isFinite(auto) && auto >= 0 ? auto : PUBLIC_DEFAULTS.autoReturn, regOpen: $('#s-open').checked };
   S.db.doc('config/settings').set(pub)
     .then(function () { return S.db.doc('secret/settings').set({ pin: pin, threshold: thr }); })
